@@ -1,0 +1,16 @@
+services:
+  search-llm:
+    build: .
+    container_name: search_llm
+    restart: unless-stopped
+    ports:
+      - "8888:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - hf_cache:/root/.cache/huggingface
+
+volumes:
+  hf_cache:
+    driver: local

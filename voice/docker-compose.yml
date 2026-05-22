@@ -1,0 +1,21 @@
+services:
+  voice-chef:
+    build:
+      context: .
+      args:
+        BUILDKIT_INLINE_CACHE: "1"
+    pull_policy: never
+    container_name: voice-chef-app
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./logs:/app/logs
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import whisper; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
