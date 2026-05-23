@@ -34,4 +34,23 @@ services:
       WHISPER_MODEL: ${WHISPER_MODEL:-tiny}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - mayda_ai_network
+    volumes:
+      - inventory_data:/data
+      - chroma_data:/chroma
+      - hf_cache:/cache/hf
     restart: unless-stopped
+
+networks:
+  mayda_ai_network:
+    name: mayda_ai_network
+    driver: bridge
+
+volumes:
+  inventory_data:
+    name: mayda_ai_inventory_data
+  chroma_data:
+    name: mayda_ai_chroma_data
+  hf_cache:
+    name: mayda_ai_hf_cache
