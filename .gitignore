@@ -1,3 +1,20 @@
+# Virtual envs
 .venv/
 venv/
+
+# Env files
 .env
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Runtime data (DB, models, vector store)
+data/
+chroma_db/
+
+# OS / editor
+.DS_Store
+*.swp
