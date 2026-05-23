@@ -1,37 +1,43 @@
 # syntax=docker/dockerfile:1.6
-FROM python:3.12-slim AS base
 
-# System deps for whisper (ffmpeg) and scientific Python wheels (gcc not strictly
-# needed since wheels are precompiled, but harmless on slim).
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg curl \
-    && rm -rf /var/lib/apt/lists/*
+# ── Builder stage: install dependencies in a virtual environment ──
+FROM ghcr.io/astral-sh/uv:latest AS uv
 
-# uv: fast, deterministic installs from the lockfile.
-COPY --from=ghcr.io/astral-sh/uv:0.11.16 /uv /usr/local/bin/uv
-
+FROM python:3.12-slim AS builder
+COPY --from=uv /uv /uvx /bin/
 WORKDIR /app
-
-# Install dependencies (cached layer — only rebuilds when lockfile changes).
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
-
-# Copy the application source.
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-install-project
 COPY src ./src
+COPY alembic ./alembic
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
 
-# Install the project itself.
-RUN uv sync --frozen --no-dev
-
+# ── Runner stage: minimal runtime image ──
+FROM python:3.12-slim
 ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
     PORT=8101 \
     HF_HOME=/cache/hf \
     INVENTORY_DATABASE_URL="sqlite:////data/inventory.db" \
     INVENTORY_MODEL_PATH="/data/models.joblib" \
     CHROMA_DB_DIR="/chroma"
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY --from=builder /app/.venv /app/.venv
+COPY src ./src
+COPY alembic ./alembic
+
+ENV PATH="/app/.venv/bin:$PATH"
+
 EXPOSE 8101
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
     CMD curl -fsS http://localhost:${PORT}/api/health || exit 1
 
-CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8101"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8101"]

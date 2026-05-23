@@ -8,7 +8,6 @@ from collections.abc import Generator
 from datetime import UTC, datetime
 
 from alembic.config import Config
-from alembic import command
 from sqlalchemy import (
     Boolean,
     Column,
@@ -19,9 +18,12 @@ from sqlalchemy import (
     String,
     Text,
     create_engine,
+    inspect,
 )
+from sqlalchemy import text as sa_text
 from sqlalchemy.orm import Session, declarative_base, relationship, sessionmaker
 
+from alembic import command
 from src.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -35,6 +37,26 @@ def run_migrations() -> None:
     alembic_cfg = Config()
     alembic_cfg.set_main_option("script_location", "alembic")
     alembic_cfg.set_main_option("sqlalchemy.url", settings.INVENTORY_DATABASE_URL)
+
+    engine = create_engine(settings.INVENTORY_DATABASE_URL)
+    inspector = inspect(engine)
+
+    if inspector.has_table("alembic_version"):
+        with engine.connect() as conn:
+            existing = conn.execute(
+                sa_text("SELECT version_num FROM alembic_version")
+            ).scalar()
+    else:
+        existing = None
+
+    if existing is None and inspector.has_table("food_items"):
+        from alembic.script import ScriptDirectory
+
+        script = ScriptDirectory.from_config(alembic_cfg)
+        command.stamp(alembic_cfg, script.get_current_head())
+        logger.info("Stamped existing database at head migration.")
+        return
+
     command.upgrade(alembic_cfg, "head")
     logger.info("Database migrations applied successfully.")
 
