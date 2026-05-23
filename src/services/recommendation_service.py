@@ -11,6 +11,7 @@ import logging
 from datetime import UTC, datetime
 from typing import Any
 
+from fastapi import HTTPException
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from src.core.config import settings
@@ -21,6 +22,24 @@ from src.schemas.recommendation_schema import (
     RecommendResponse,
 )
 from src.services.backend_client import BackendAPIClient
+
+
+def _dish_info_from_backend(d: dict[str, Any]) -> DishInfo:
+    """Build a DishInfo from a backend-dish dict.
+
+    The shape mismatch between the backend (`isAvailable`, `categoryId`,
+    camelCase) and our Pydantic schema (`is_available`, `category_id`,
+    snake_case) is handled here once instead of at every callsite.
+    """
+    return DishInfo(
+        id=d["id"],
+        name=d["name"],
+        description=d.get("description", ""),
+        price=d.get("price", 0),
+        popularity=d.get("popularity", 0),
+        is_available=d.get("isAvailable", True),
+        category_id=d.get("categoryId"),
+    )
 
 # Conditional LLM imports
 try:
@@ -76,8 +95,6 @@ class RecommendationService:
         # 1. Fetch user profile
         user_profile = await self.backend.get_user_profile(req.user_id, request_id=request_id)
         if not user_profile:
-            from fastapi import HTTPException
-
             raise HTTPException(status_code=404, detail=f"User {req.user_id} not found")
 
         # 2. Fetch dishes
@@ -88,8 +105,6 @@ class RecommendationService:
 
         available = [d for d in dishes if d.get("isAvailable", True)]
         if not available:
-            from fastapi import HTTPException
-
             raise HTTPException(status_code=404, detail="No dishes available")
 
         # 3. Generate recommendations
@@ -213,18 +228,9 @@ Return ONLY the JSON array, no additional text."""
             for item in items:
                 dish_id = item.get("dish_id")
                 if dish_id and dish_id in lookup:
-                    d = lookup[dish_id]
                     recs.append(
                         Recommendation(
-                            dish=DishInfo(
-                                id=d["id"],
-                                name=d["name"],
-                                description=d.get("description", ""),
-                                price=d.get("price", 0),
-                                popularity=d.get("popularity", 0),
-                                is_available=d.get("isAvailable", True),
-                                category_id=d.get("categoryId"),
-                            ),
+                            dish=_dish_info_from_backend(lookup[dish_id]),
                             confidence_score=min(max(float(item.get("confidence_score", 0.5)), 0), 1),
                             explanation=item.get("explanation", "Recommended based on your preferences"),
                             source="llm",
@@ -277,15 +283,7 @@ Return ONLY the JSON array, no additional text."""
         for d, score in scored[:limit]:
             recs.append(
                 Recommendation(
-                    dish=DishInfo(
-                        id=d["id"],
-                        name=d["name"],
-                        description=d.get("description", ""),
-                        price=d.get("price", 0),
-                        popularity=d.get("popularity", 0),
-                        is_available=d.get("isAvailable", True),
-                        category_id=d.get("categoryId"),
-                    ),
+                    dish=_dish_info_from_backend(d),
                     confidence_score=score,
                     explanation=f"Popular choice (score: {score:.2f}) matching your preferences",
                     source="fallback",
