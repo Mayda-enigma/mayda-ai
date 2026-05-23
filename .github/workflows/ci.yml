@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Detect which areas of the repo changed so downstream jobs can skip cleanly
+  # on docs-only commits. The original plan (AI-003) had one path per service;
+  # the codebase has since collapsed into a single `src/` app so we filter on
+  # that path. Per-service filters (recommendation/, search/, ...) are listed
+  # for forward compatibility if the layout splits again.
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            app:
+              - 'src/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
+              - '.github/workflows/**'
+              - 'Dockerfile'
+              - 'docker-compose.yml'
+            docs:
+              - 'docs/**'
+              - '**/*.md'
