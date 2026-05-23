@@ -6,8 +6,9 @@ import os
 import shutil
 import tempfile
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
+from src.api.deps import TranscriberDep
 from src.middleware.service_auth import require_service_token
 from src.schemas.voice_schema import (
     ChefParseRequest,
@@ -18,16 +19,10 @@ from src.schemas.voice_schema import (
 )
 from src.services.voice_chef_parser import parse_chef_command
 from src.services.voice_order_parser import parse_order
-from src.services.voice_transcribe import Transcriber
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-def _get_transcriber(request: Request) -> Transcriber:
-    """Retrieve the global Transcriber stored in app.state."""
-    return request.app.state.transcriber
 
 
 # ── Voice Endpoints ──
@@ -37,9 +32,9 @@ def _get_transcriber(request: Request) -> Transcriber:
     dependencies=[Depends(require_service_token)],
 )
 async def transcribe_audio(
+    transcriber: TranscriberDep,
     audio: UploadFile = File(...),
     language: str | None = Form(None),
-    transcriber: Transcriber = Depends(_get_transcriber),
 ):
     """
     Transcribe raw vocal/audio files (e.g. WAV, MP3, M4A) to standard French or English text.

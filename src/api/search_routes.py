@@ -1,8 +1,9 @@
 """
 API routes for the Search Service.
 """
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException
 
+from src.api.deps import SearchServiceDep
 from src.middleware.service_auth import require_service_token
 from src.schemas.search_schema import (
     DishCreate,
@@ -15,14 +16,8 @@ from src.schemas.search_schema import (
     TextSearchRequest,
     TextSearchResponse,
 )
-from src.services.search_service import SearchService
 
 router = APIRouter()
-
-
-def _get_search_service(request: Request) -> SearchService:
-    """Retrieve the SearchService stored on app.state during lifespan."""
-    return request.app.state.search_service
 
 
 # ── Search Endpoints ──
@@ -34,7 +29,7 @@ def _get_search_service(request: Request) -> SearchService:
 )
 async def search_dishes(
     body: SearchRequest,
-    service: SearchService = Depends(_get_search_service),
+    service: SearchServiceDep,
 ):
     """
     Search for dishes by natural language query (Arabic, French, English, Darija).
@@ -52,7 +47,7 @@ async def search_dishes(
 )
 async def create_dish(
     body: DishCreate,
-    service: SearchService = Depends(_get_search_service),
+    service: SearchServiceDep,
 ):
     """Index a new dish."""
     return await service.create_dish(dish=body)
@@ -66,7 +61,7 @@ async def create_dish(
 async def update_dish(
     dish_id: int,
     body: DishUpdate,
-    service: SearchService = Depends(_get_search_service),
+    service: SearchServiceDep,
 ):
     """Update an existing indexed dish."""
     return await service.update_dish(dish_id=dish_id, dish=body)
@@ -79,7 +74,7 @@ async def update_dish(
 )
 async def delete_dish(
     dish_id: int,
-    service: SearchService = Depends(_get_search_service),
+    service: SearchServiceDep,
 ):
     """Delete a dish from the index."""
     return await service.delete_dish(dish_id=dish_id)
@@ -92,7 +87,7 @@ async def delete_dish(
     dependencies=[Depends(require_service_token)],
 )
 async def get_database_info(
-    service: SearchService = Depends(_get_search_service),
+    service: SearchServiceDep,
 ):
     """Get ChromaDB collection statistics and status."""
     return service.chroma_db.get_collection_info()
@@ -103,7 +98,7 @@ async def get_database_info(
     dependencies=[Depends(require_service_token)],
 )
 async def list_all_dish_ids(
-    service: SearchService = Depends(_get_search_service),
+    service: SearchServiceDep,
 ):
     """List all indexed dish IDs."""
     ids = service.chroma_db.list_all_ids()
@@ -116,12 +111,11 @@ async def list_all_dish_ids(
 )
 async def get_dish_by_id(
     dish_id: int,
-    service: SearchService = Depends(_get_search_service),
+    service: SearchServiceDep,
 ):
     """Get indexed metadata for a specific dish ID."""
     dish = service.chroma_db.get_embedding_by_id(dish_id)
     if dish is None:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail=f"Dish with ID {dish_id} not found in index")
     return {
         "id": dish["id"],
@@ -139,7 +133,7 @@ async def get_dish_by_id(
 )
 async def search_similar_dishes(
     body: SimilaritySearch,
-    service: SearchService = Depends(_get_search_service),
+    service: SearchServiceDep,
 ):
     """Legacy vector-based similarity search."""
     results = await service.search_similar_dishes(
@@ -160,7 +154,7 @@ async def search_similar_dishes(
 )
 async def search_dishes_by_text(
     body: TextSearchRequest,
-    service: SearchService = Depends(_get_search_service),
+    service: SearchServiceDep,
 ):
     """Legacy text-based query search returning a list of matching IDs."""
     ids = await service.search_dishes_by_text(
