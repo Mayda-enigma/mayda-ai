@@ -5,16 +5,11 @@ GET  /health          — public health check.
 """
 from fastapi import APIRouter, Depends, Request
 
+from src.api.deps import RecommendationServiceDep
 from src.middleware.service_auth import require_service_token
 from src.schemas.recommendation_schema import RecommendRequest, RecommendResponse
-from src.services.recommendation_service import RecommendationService
 
 router = APIRouter()
-
-
-def _get_recommendation_service(request: Request) -> RecommendationService:
-    """Retrieve the RecommendationService stored on app.state during lifespan."""
-    return request.app.state.recommendation_service
 
 
 # ── Public ──
@@ -35,7 +30,7 @@ async def health_check():
 async def post_recommendations(
     body: RecommendRequest,
     request: Request,
-    service: RecommendationService = Depends(_get_recommendation_service),
+    service: RecommendationServiceDep,
 ):
     """Generate AI-powered recommendations for a user."""
     request_id: str | None = getattr(request.state, "request_id", None)
