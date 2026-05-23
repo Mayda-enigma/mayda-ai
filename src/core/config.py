@@ -2,8 +2,8 @@
 Application configuration using pydantic-settings.
 Loads from environment variables and .env file.
 """
+
 from pydantic_settings import BaseSettings
-from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -19,8 +19,8 @@ class Settings(BaseSettings):
     # ── LLM configuration ──
     LLM_PROVIDER: str = "gemini"
     LLM_MODEL: str = "gemini-2.0-flash"
-    GEMINI_API_KEY: Optional[str] = None
-    OPENAI_API_KEY: Optional[str] = None
+    GEMINI_API_KEY: str | None = None
+    OPENAI_API_KEY: str | None = None
     LLM_TEMPERATURE: float = 0.3
     LLM_MAX_TOKENS: int = 1000
 

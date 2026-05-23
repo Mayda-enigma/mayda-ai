@@ -1,25 +1,24 @@
 """
 API routes for the Voice Service.
 """
-from datetime import datetime, timezone
 import logging
 import os
 import shutil
 import tempfile
-from typing import Dict, Any, Optional
 
-from fastapi import APIRouter, Depends, Request, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+
 from src.middleware.service_auth import require_service_token
 from src.schemas.voice_schema import (
     ChefParseRequest,
     ChefParseResponse,
+    OrderParseItem,
     OrderParseRequest,
     OrderParseResponse,
-    OrderParseItem,
 )
-from src.services.voice_transcribe import Transcriber
 from src.services.voice_chef_parser import parse_chef_command
 from src.services.voice_order_parser import parse_order
+from src.services.voice_transcribe import Transcriber
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +38,7 @@ def _get_transcriber(request: Request) -> Transcriber:
 )
 async def transcribe_audio(
     audio: UploadFile = File(...),
-    language: Optional[str] = Form(None),
+    language: str | None = Form(None),
     transcriber: Transcriber = Depends(_get_transcriber),
 ):
     """
@@ -97,7 +96,7 @@ async def parse_chef_vocal_command(
                 matched_phrase=None,
                 message=f"❌ Commande rejetée - format ou intention incomprise: '{body.text}'"
             )
-        
+
         return ChefParseResponse(
             type=result["type"],
             order_number=result["order_number"],
@@ -125,9 +124,9 @@ async def parse_customer_verbal_order(
     try:
         # Transform MenuItem Pydantic models to dictionaries
         menu_items_list = [{"id": item.id, "name": item.name} for item in body.menu_items]
-        
+
         parsed_results = parse_order(body.text, menu_items_list)
-        
+
         items = [
             OrderParseItem(
                 menu_item_id=res["menu_item_id"],
@@ -137,7 +136,7 @@ async def parse_customer_verbal_order(
             )
             for res in parsed_results
         ]
-        
+
         return OrderParseResponse(items=items)
     except Exception as exc:
         logger.error("Error parsing customer order: %s", exc)

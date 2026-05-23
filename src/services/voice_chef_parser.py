@@ -2,10 +2,10 @@
 French chef voice command parser logic.
 Ported and refactored from mayda-ai/voice/VoiceScript.py.
 """
-from difflib import SequenceMatcher
 import logging
 import re
-from typing import Dict, Any, Optional
+from difflib import SequenceMatcher
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -15,22 +15,22 @@ def calculate_similarity(text1: str, text2: str) -> int:
     return int(SequenceMatcher(None, text1.lower(), text2.lower()).ratio() * 100)
 
 
-def parse_chef_command(text: str) -> Optional[Dict[str, Any]]:
+def parse_chef_command(text: str) -> dict[str, Any] | None:
     """
     Parses French chef commands to identify order number and action type ('lance' or 'prete').
-    
+
     Args:
         text (str): The raw transcribed command text.
-        
+
     Returns:
         Optional[Dict]: Parser result dictionary or None if match failed.
     """
     text_lower = text.lower().strip()
     logger.info("📝 Parsing chef transcription: '%s'", text)
-    
+
     # Extract numbers from text
     numbers = re.findall(r"\d+", text_lower)
-    
+
     if not numbers:
         # Detect French word numbers
         number_words = {
@@ -39,20 +39,20 @@ def parse_chef_command(text: str) -> Optional[Dict[str, Any]]:
             "onze": "11", "douze": "12", "treize": "13", "quatorze": "14", "quinze": "15",
             "seize": "16", "dix-sept": "17", "dix-huit": "18", "dix-neuf": "19", "vingt": "20"
         }
-        
+
         for word, num in number_words.items():
             if word in text_lower:
                 numbers = [num]
                 logger.info("📊 French word-number recognized: '%s' -> %s", word, num)
                 break
-                
+
     if not numbers:
         logger.warning("❌ No order number detected in transcription.")
         return None
-        
+
     order_number = numbers[0]
     logger.info("📊 Extracted Order ID: %s", order_number)
-    
+
     # Expected commands for similarity comparisons
     expected_lance_phrases = [
         f"commande {order_number} lance",
@@ -61,7 +61,7 @@ def parse_chef_command(text: str) -> Optional[Dict[str, Any]]:
         f"commande numéro {order_number} lance",
         f"lance la commande {order_number}",
     ]
-    
+
     expected_prete_phrases = [
         f"commande {order_number} prete",
         f"commande {order_number} prête",
@@ -70,9 +70,9 @@ def parse_chef_command(text: str) -> Optional[Dict[str, Any]]:
         f"prête la commande {order_number}",
         f"commande {order_number} est prête",
     ]
-    
+
     similarity_threshold = 65  # Slightly more relaxed threshold for vocal variations
-    
+
     # Compare with LANCE commands
     best_lance_similarity = 0
     best_lance_phrase = ""
@@ -81,7 +81,7 @@ def parse_chef_command(text: str) -> Optional[Dict[str, Any]]:
         if sim > best_lance_similarity:
             best_lance_similarity = sim
             best_lance_phrase = expected
-            
+
     # Compare with PRETE commands
     best_prete_similarity = 0
     best_prete_phrase = ""
@@ -91,7 +91,7 @@ def parse_chef_command(text: str) -> Optional[Dict[str, Any]]:
             best_prete_similarity = sim
             best_prete_phrase = expected
 
-    logger.info("Best Lance: %s%% ('%s') | Best Prete: %s%% ('%s')", 
+    logger.info("Best Lance: %s%% ('%s') | Best Prete: %s%% ('%s')",
                 best_lance_similarity, best_lance_phrase, best_prete_similarity, best_prete_phrase)
 
     # Decide action type
@@ -113,6 +113,6 @@ def parse_chef_command(text: str) -> Optional[Dict[str, Any]]:
             "matched_phrase": best_prete_phrase,
             "message": f"🍽️ Commande {order_number} - Prête à servir! (similarité: {best_prete_similarity}%)",
         }
-    
+
     logger.warning("❌ Command rejected due to low similarity (below %d%% threshold)", similarity_threshold)
     return None

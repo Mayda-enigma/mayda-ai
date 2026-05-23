@@ -2,10 +2,9 @@
 Pydantic schemas for the recommendation service.
 Matches the backend gateway contract (RC-003).
 """
-from pydantic import BaseModel, Field
-from typing import Optional
 from datetime import datetime
 
+from pydantic import BaseModel, Field
 
 # ── Request ──
 
@@ -13,9 +12,9 @@ class RecommendRequest(BaseModel):
     """POST /recommendations request body — matches backend proxy contract."""
     user_id: int
     cart_item_ids: list[int] = Field(default_factory=list)
-    time_of_day: Optional[str] = None
+    time_of_day: str | None = None
     limit: int = Field(default=5, ge=1, le=20)
-    restaurant_id: Optional[int] = None
+    restaurant_id: int | None = None
 
 
 # ── Response ──
@@ -28,7 +27,7 @@ class DishInfo(BaseModel):
     price: float
     popularity: float = 0.0
     is_available: bool = True
-    category_id: Optional[int] = None
+    category_id: int | None = None
 
 
 class Recommendation(BaseModel):

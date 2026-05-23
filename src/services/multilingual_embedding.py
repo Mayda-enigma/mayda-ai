@@ -4,7 +4,6 @@ Ported from mayda-ai/search/model.py.
 """
 import logging
 import re
-from typing import Dict, Tuple
 
 import numpy as np
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -72,7 +71,7 @@ class MultilingualEmbeddingModel:
         """
         return self.response_messages.get(language_code, self.response_messages["default"])
 
-    def embed_multilingual_query(self, query: str) -> Tuple[np.ndarray, str]:
+    def embed_multilingual_query(self, query: str) -> tuple[np.ndarray, str]:
         """
         Embed a multilingual query and return the vector with localized response message.
         """
@@ -97,7 +96,7 @@ class MultilingualEmbeddingModel:
         embeddings_list = self.embeddings.embed_documents(documents)
         return np.array(embeddings_list)
 
-    def get_supported_languages(self) -> Dict[str, str]:
+    def get_supported_languages(self) -> dict[str, str]:
         """
         Get information about supported languages.
         """

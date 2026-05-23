@@ -1,25 +1,24 @@
 """
 API routes for the Restaurant Inventory Forecasting Service.
 """
-from datetime import datetime, timezone
 import logging
-from typing import Dict, Any, List
+from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
+from src.core.config import settings
+from src.middleware.service_auth import require_service_token
 from src.schemas.inventory_schema import (
-    ForecastRequest,
-    ForecastResponse,
     BulkForecastRequest,
     BulkForecastResponse,
     ConsumptionLogInput,
     ConsumptionLogResponse,
+    ForecastRequest,
+    ForecastResponse,
 )
 from src.services.inventory_db_service import FoodItem, get_inventory_db
 from src.services.inventory_forecaster import DatabaseIntegratedForecaster
-from src.middleware.service_auth import require_service_token
-from src.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ async def forecast_item(
         date=body.date.strftime("%Y-%m-%d"),
         units=prediction,
         model_version="RandomForest_v1.0",
-        generated_at=datetime.now(timezone.utc).isoformat(),
+        generated_at=datetime.now(UTC).isoformat(),
     )
 
 
@@ -98,7 +97,7 @@ async def forecast_bulk(
                     date=item_req.date.strftime("%Y-%m-%d"),
                     units=prediction,
                     model_version="RandomForest_v1.0",
-                    generated_at=datetime.now(timezone.utc).isoformat(),
+                    generated_at=datetime.now(UTC).isoformat(),
                 )
             )
 
@@ -154,7 +153,7 @@ async def log_consumption(
     try:
         forecaster.add_consumption_record(
             food_item=body.food_item,
-            date=datetime.now(timezone.utc),
+            date=datetime.now(UTC),
             consumption=body.consumption,
             db=db,
             weather=body.weather or "sunny",

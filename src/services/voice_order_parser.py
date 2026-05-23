@@ -4,32 +4,33 @@ Implements VC-006.
 """
 import logging
 import re
-from typing import Dict, Any, List, Optional
+from typing import Any
+
 from src.services.voice_chef_parser import calculate_similarity
 
 logger = logging.getLogger(__name__)
 
 
-def parse_order(text: str, menu_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def parse_order(text: str, menu_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Parses a user order transcript to find menu items and quantities.
     E.g. "two burgers and a coke" -> [{"menu_item_id": 1, "quantity": 2, "confidence": 100}]
-    
+
     Args:
         text (str): Transcription of customer's order.
         menu_items (List[Dict]): List of available menu items, e.g., [{"id": 1, "name": "Burger"}]
-        
+
     Returns:
         List[Dict]: List of parsed items with menu_item_id, quantity, and similarity confidence.
     """
     text_lower = text.lower().strip()
     logger.info("📝 Parsing customer order transcript: '%s'", text)
-    
+
     # Split text by conjunction words to isolate individual item segments
     # Splitting by "and", "et", "with", "avec", ",", "+", "plus"
     split_pattern = r"\s+(?:and|et|with|avec|\+|\bplus\b)\s+|,\s*"
     segments = re.split(split_pattern, text_lower)
-    
+
     number_words = {
         # English numbers
         "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
@@ -40,19 +41,19 @@ def parse_order(text: str, menu_items: List[Dict[str, Any]]) -> List[Dict[str, A
         "six_fr": 6, "sept": 7, "huit": 8, "neuf": 9, "dix": 10,
         "le": 1, "la": 1, "des": 1,
     }
-    
+
     parsed_items = []
-    
+
     for segment in segments:
         segment = segment.strip()
         if not segment:
             continue
-            
+
         logger.info("Analyzing segment: '%s'", segment)
-        
+
         # 1. Detect and extract quantity
         quantity = 1  # Default to 1 if no quantity is specified
-        
+
         # Check for digit patterns (e.g. "2 burgers", "burgers 3")
         digits = re.findall(r"\d+", segment)
         if digits:
@@ -62,7 +63,6 @@ def parse_order(text: str, menu_items: List[Dict[str, Any]]) -> List[Dict[str, A
         else:
             # Check for written number words (e.g. "two burgers")
             item_words = segment.split()
-            found_num = False
             for i, word in enumerate(item_words):
                 # Clean word from plural endings like 's' for language checks
                 clean_word = word.rstrip("s")
@@ -70,37 +70,36 @@ def parse_order(text: str, menu_items: List[Dict[str, Any]]) -> List[Dict[str, A
                     quantity = number_words[clean_word]
                     # Remove the word from item name candidate
                     item_words.pop(i)
-                    found_num = True
                     break
-            
+
             item_text = " ".join(item_words)
-            
+
         # Clean item text (remove plurals, double spaces, and standard stop words)
         item_text = re.sub(r"\s+", " ", item_text).strip()
         # Clean trailing plural 's' or 'x' (for French)
         item_clean = item_text.rstrip("sx")
-        
+
         if not item_clean:
             continue
-            
+
         # 2. Fuzzy match against menu items
         best_match = None
         best_confidence = 0
-        
+
         # Tokenize the spoken item text for word-level comparisons
         item_tokens = re.split(r"[\s\-]+", item_clean)
-        
+
         for menu_item in menu_items:
             item_name = menu_item["name"].lower()
             item_name_clean = item_name.rstrip("sx")
-            
+
             # Full-string SequenceMatcher similarity
             similarity = calculate_similarity(item_clean, item_name_clean)
-            
+
             # Substring containment boost (e.g. "burger" in "cheeseburger")
             if item_clean in item_name_clean or item_name_clean in item_clean:
                 similarity = max(similarity, 85)
-            
+
             # Word-level matching: split menu item name by spaces/hyphens
             # and compare each token against each spoken token.
             # This catches "coke" matching "Coca-Cola" or "nuggets" matching "Chicken Nuggets"
@@ -120,11 +119,11 @@ def parse_order(text: str, menu_items: List[Dict[str, Any]]) -> List[Dict[str, A
                     # If any individual token matches strongly, boost overall similarity
                     if tok_sim >= 70:
                         similarity = max(similarity, tok_sim)
-                
+
             if similarity > best_confidence:
                 best_confidence = similarity
                 best_match = menu_item
-                
+
         # Only accept matches above similarity threshold (e.g. 50%)
         if best_match and best_confidence >= 50:
             parsed_items.append({
@@ -137,5 +136,5 @@ def parse_order(text: str, menu_items: List[Dict[str, Any]]) -> List[Dict[str, A
                         segment, best_match["name"], best_match["id"], quantity, best_confidence)
         else:
             logger.warning("Could not find a reliable match for segment '%s' (Best similarity: %d%%)", segment, best_confidence)
-            
+
     return parsed_items

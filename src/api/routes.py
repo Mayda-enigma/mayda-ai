@@ -5,9 +5,9 @@ GET  /health          — public health check.
 """
 from fastapi import APIRouter, Depends, Request
 
+from src.middleware.service_auth import require_service_token
 from src.schemas.recommendation_schema import RecommendRequest, RecommendResponse
 from src.services.recommendation_service import RecommendationService
-from src.middleware.service_auth import require_service_token
 
 router = APIRouter()
 

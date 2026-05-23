@@ -8,21 +8,21 @@ import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.core.config import settings
+from src.api.inventory_routes import router as inventory_router
 from src.api.routes import router
 from src.api.search_routes import router as search_router
-from src.api.inventory_routes import router as inventory_router
+from src.api.voice_routes import router as voice_router
+from src.core.config import settings
 from src.middleware.request_id import RequestIdMiddleware
 from src.services.backend_client import BackendAPIClient
-from src.services.recommendation_service import RecommendationService
 from src.services.chromadb_service import ChromaEmbeddingsDatabase
 from src.services.embedding_generator import EmbedGenerator
-from src.services.multilingual_embedding import MultilingualEmbeddingModel
-from src.services.search_service import SearchService
-from src.services.inventory_db_service import init_inventory_db, SessionLocal
+from src.services.inventory_db_service import SessionLocal, init_inventory_db
 from src.services.inventory_forecaster import DatabaseIntegratedForecaster
+from src.services.multilingual_embedding import MultilingualEmbeddingModel
+from src.services.recommendation_service import RecommendationService
+from src.services.search_service import SearchService
 from src.services.voice_transcribe import Transcriber
-from src.api.voice_routes import router as voice_router
 
 # ── Logging ──
 logging.basicConfig(

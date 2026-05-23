@@ -2,23 +2,23 @@
 SQLAlchemy models and database setup for the Restaurant Inventory Forecasting System.
 Ported and refactored from mayda-ai/inventory/database.py.
 """
-from datetime import datetime, timezone
 import logging
 import os
-from typing import Generator
+from collections.abc import Generator
+from datetime import UTC, datetime
 
 from sqlalchemy import (
-    create_engine,
+    Boolean,
     Column,
+    DateTime,
+    Float,
+    ForeignKey,
     Integer,
     String,
-    Float,
-    DateTime,
-    Boolean,
-    ForeignKey,
     Text,
+    create_engine,
 )
-from sqlalchemy.orm import declarative_base, sessionmaker, relationship, Session
+from sqlalchemy.orm import Session, declarative_base, relationship, sessionmaker
 
 from src.core.config import settings
 
@@ -38,8 +38,8 @@ class FoodItem(Base):
     category = Column(String(50), nullable=True)
     unit = Column(String(20), default="units")  # kg, units, liters, etc.
     description = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
     # Relationships
     inventory_records = relationship("InventoryRecord", back_populates="food_item", cascade="all, delete-orphan")
@@ -58,7 +58,7 @@ class InventoryRecord(Base):
     supplier = Column(String(100), nullable=True)
     unit_cost = Column(Float, nullable=True)
     last_restocked = Column(DateTime, nullable=True)
-    last_updated = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    last_updated = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
     notes = Column(Text, nullable=True)
 
     # Relationships
@@ -80,7 +80,7 @@ class ConsumptionHistory(Base):
     temperature = Column(Float, nullable=True)
     predicted_consumption = Column(Float, nullable=True)  # For comparison
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     # Relationships
     food_item = relationship("FoodItem", back_populates="consumption_history")
@@ -98,7 +98,7 @@ class ForecastResult(Base):
     confidence_interval_upper = Column(Float, nullable=True)
     model_version = Column(String(50), nullable=True)
     accuracy_score = Column(Float, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
 
 class RestockRecommendation(Base):
@@ -106,7 +106,7 @@ class RestockRecommendation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     food_item_id = Column(Integer, ForeignKey("food_items.id"), nullable=False)
-    recommendation_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    recommendation_date = Column(DateTime, default=lambda: datetime.now(UTC))
     current_stock = Column(Float, nullable=False)
     predicted_consumption = Column(Float, nullable=False)
     recommended_order_quantity = Column(Float, nullable=False)
@@ -115,8 +115,8 @@ class RestockRecommendation(Base):
     supplier_recommended = Column(String(100), nullable=True)
     estimated_cost = Column(Float, nullable=True)
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
 
 # ── Database Initialization & Connections ──

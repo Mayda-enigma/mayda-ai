@@ -4,10 +4,10 @@ Ported from mayda-ai/search/chromadb_helper.py.
 """
 import logging
 import os
-from typing import Any, Dict, List, Optional, Union
-import numpy as np
+from typing import Any
 
 import chromadb
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +18,14 @@ class ChromaEmbeddingsDatabase:
     Creates a collection to store vectors with IDs and metadata.
     """
 
-    def __init__(self, persist_directory: Optional[str] = None, collection_name: str = "dishes"):
+    def __init__(self, persist_directory: str | None = None, collection_name: str = "dishes"):
         """
         Initialize ChromaDB client and collection properties.
         """
         self.persist_directory = persist_directory or os.path.join(os.getcwd(), "chroma_db")
         self.collection_name = collection_name
-        self.client: Optional[chromadb.PersistentClient] = None
-        self.collection: Optional[chromadb.Collection] = None
+        self.client: chromadb.PersistentClient | None = None
+        self.collection: chromadb.Collection | None = None
 
     def initialize_database(self) -> None:
         """Initialize ChromaDB client and create/get the embeddings collection."""
@@ -50,9 +50,9 @@ class ChromaEmbeddingsDatabase:
 
     def add_embedding(
         self,
-        embedding_id: Union[str, int],
-        embedding_vector: Union[List[float], np.ndarray],
-        metadata: Optional[Dict[str, Any]] = None,
+        embedding_id: str | int,
+        embedding_vector: list[float] | np.ndarray,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """
         Add a single embedding to the database.
@@ -75,9 +75,9 @@ class ChromaEmbeddingsDatabase:
 
     def add_embeddings_batch(
         self,
-        embedding_ids: List[Union[str, int]],
-        embedding_vectors: Union[List[List[float]], List[np.ndarray]],
-        metadatas: Optional[List[Dict[str, Any]]] = None,
+        embedding_ids: list[str | int],
+        embedding_vectors: list[list[float]] | list[np.ndarray],
+        metadatas: list[dict[str, Any]] | None = None,
     ) -> None:
         """
         Add multiple embeddings to the database in batch.
@@ -100,7 +100,7 @@ class ChromaEmbeddingsDatabase:
             metadatas=metadatas,
         )
 
-    def get_embedding_by_id(self, embedding_id: Union[str, int]) -> Optional[Dict[str, Any]]:
+    def get_embedding_by_id(self, embedding_id: str | int) -> dict[str, Any] | None:
         """
         Retrieve an embedding by its ID.
         """
@@ -144,10 +144,10 @@ class ChromaEmbeddingsDatabase:
 
     def search_similar(
         self,
-        query_vector: Union[List[float], np.ndarray],
+        query_vector: list[float] | np.ndarray,
         n_results: int = 10,
-        where: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        where: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Search for similar embeddings.
         """
@@ -172,9 +172,9 @@ class ChromaEmbeddingsDatabase:
 
     def update_embedding(
         self,
-        embedding_id: Union[str, int],
-        embedding_vector: Optional[Union[List[float], np.ndarray]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        embedding_id: str | int,
+        embedding_vector: list[float] | np.ndarray | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """
         Update an existing embedding's vector or metadata.
@@ -183,7 +183,7 @@ class ChromaEmbeddingsDatabase:
             self.initialize_database()
 
         str_id = str(embedding_id)
-        update_data: Dict[str, Any] = {"ids": [str_id]}
+        update_data: dict[str, Any] = {"ids": [str_id]}
 
         if embedding_vector is not None:
             if isinstance(embedding_vector, np.ndarray):
@@ -195,7 +195,7 @@ class ChromaEmbeddingsDatabase:
 
         self.collection.update(**update_data)  # type: ignore
 
-    def delete_embedding(self, embedding_id: Union[str, int]) -> None:
+    def delete_embedding(self, embedding_id: str | int) -> None:
         """
         Delete an embedding by its ID.
         """
@@ -205,7 +205,7 @@ class ChromaEmbeddingsDatabase:
         str_id = str(embedding_id)
         self.collection.delete(ids=[str_id])  # type: ignore
 
-    def get_collection_info(self) -> Dict[str, Any]:
+    def get_collection_info(self) -> dict[str, Any]:
         """
         Get information about the collection.
         """
@@ -220,7 +220,7 @@ class ChromaEmbeddingsDatabase:
             "persist_directory": self.persist_directory,
         }
 
-    def list_all_ids(self) -> List[str]:
+    def list_all_ids(self) -> list[str]:
         """
         Get all embedding IDs in the collection.
         """

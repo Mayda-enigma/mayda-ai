@@ -1,9 +1,8 @@
 """
 Pydantic schemas for Voice service APIs.
 """
-from typing import List, Optional
-from pydantic import BaseModel, Field
 
+from pydantic import BaseModel, Field
 
 # ── Chef Command Parse Schemas ──
 
@@ -14,11 +13,11 @@ class ChefParseRequest(BaseModel):
 
 class ChefParseResponse(BaseModel):
     """Response schema representing the parsed French chef command."""
-    type: Optional[str] = Field(None, description="Action type: 'lance', 'prete', or null")
-    order_number: Optional[str] = Field(None, description="Extracted order numeric identifier")
-    confidence: Optional[int] = Field(None, description="Matching confidence score (0-100)")
-    matched_phrase: Optional[str] = Field(None, description="Target phrase that yielded the best match")
-    message: Optional[str] = Field(None, description="Formatted response narrative message")
+    type: str | None = Field(None, description="Action type: 'lance', 'prete', or null")
+    order_number: str | None = Field(None, description="Extracted order numeric identifier")
+    confidence: int | None = Field(None, description="Matching confidence score (0-100)")
+    matched_phrase: str | None = Field(None, description="Target phrase that yielded the best match")
+    message: str | None = Field(None, description="Formatted response narrative message")
 
 
 # ── Customer Menu Order Parse Schemas ──
@@ -32,17 +31,17 @@ class MenuItem(BaseModel):
 class OrderParseRequest(BaseModel):
     """Request schema for parsing fuzzy verbal menu orders."""
     text: str = Field(..., description="Spoken/transcribed order text, e.g., 'two burgers and a cola'")
-    menu_items: List[MenuItem] = Field(..., description="Available catalog of items to match against")
+    menu_items: list[MenuItem] = Field(..., description="Available catalog of items to match against")
 
 
 class OrderParseItem(BaseModel):
     """Result details of a successfully parsed menu order item."""
     menu_item_id: int = Field(..., description="Matched menu item ID")
-    menu_item_name: Optional[str] = Field(None, description="Matched menu item name")
+    menu_item_name: str | None = Field(None, description="Matched menu item name")
     quantity: int = Field(1, description="Quantity ordered")
     confidence: int = Field(..., description="Matching similarity confidence score (0-100)")
 
 
 class OrderParseResponse(BaseModel):
     """Response schema for order parsing."""
-    items: List[OrderParseItem] = Field(..., description="List of matched catalog items and quantities")
+    items: list[OrderParseItem] = Field(..., description="List of matched catalog items and quantities")

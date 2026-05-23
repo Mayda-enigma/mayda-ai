@@ -2,20 +2,20 @@
 Orchestration service for dish search and indexing operations.
 """
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from fastapi import HTTPException
 
+from src.schemas.search_schema import (
+    DishCreate,
+    DishResponse,
+    DishUpdate,
+    SearchResponse,
+    SearchResultItem,
+)
 from src.services.chromadb_service import ChromaEmbeddingsDatabase
 from src.services.embedding_generator import EmbedGenerator
 from src.services.multilingual_embedding import MultilingualEmbeddingModel
-from src.schemas.search_schema import (
-    DishCreate,
-    DishUpdate,
-    DishResponse,
-    SearchResultItem,
-    SearchResponse,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class SearchService:
         self.multilingual_model = multilingual_model
 
     async def search(
-        self, query: str, restaurant_id: Optional[int] = None, limit: int = 10
+        self, query: str, restaurant_id: int | None = None, limit: int = 10
     ) -> SearchResponse:
         """
         Search for dishes by natural language query (Arabic, French, English, Darija).
@@ -212,12 +212,12 @@ class SearchService:
     # ── Legacy Search Wrappers ──
 
     async def search_similar_dishes(
-        self, query_vector: List[float], max_results: int = 10
-    ) -> Dict[str, Any]:
+        self, query_vector: list[float], max_results: int = 10
+    ) -> dict[str, Any]:
         """Legacy similar dishes vector query search."""
         return self.chroma_db.search_similar(query_vector=query_vector, n_results=max_results)
 
-    async def search_dishes_by_text(self, query: str, max_results: int = 10) -> List[str]:
+    async def search_dishes_by_text(self, query: str, max_results: int = 10) -> list[str]:
         """Legacy text-based similar dishes query returning IDs list."""
         embedding_vector, _ = self.multilingual_model.embed_multilingual_query(query)
         results = self.chroma_db.search_similar(query_vector=embedding_vector, n_results=max_results)
