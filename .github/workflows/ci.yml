@@ -34,3 +34,40 @@ jobs:
             docs:
               - 'docs/**'
               - '**/*.md'
+
+  build:
+    name: Build & smoke-test (${{ matrix.service }})
+    needs: changes
+    if: ${{ needs.changes.outputs.app == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The matrix has a single entry today (consolidated app). Keep the
+        # structure so AI-001-rev or future re-splits can extend it back to
+        # [recommendation, search, inventory, voice] without rewriting CI.
+        service: [app]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.11.16"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Smoke-test app import
+        run: uv run python -c "from src.main import app; assert len(app.routes) > 0"
+
+      - name: Run pytest (if tests exist)
+        run: |
+          if [ -d tests ] || ls test_*.py 2>/dev/null || ls **/test_*.py 2>/dev/null; then
+            uv run pytest -q
+          else
+            echo "No tests directory yet — skipping"
+          fi
