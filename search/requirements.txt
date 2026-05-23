@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-chromadb
-sentence-transformers
-langchain-huggingface
-langdetect
-numpy
-pydantic
