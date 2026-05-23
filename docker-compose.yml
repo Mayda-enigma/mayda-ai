@@ -1,0 +1,62 @@
+# Root orchestration for mayda-ai.
+#
+# Original AI-004 planned four services on ports 8101-8104. The codebase has
+# since collapsed into a single FastAPI app under `src/`, so this file defines
+# one `app` service that exposes every endpoint on :8101:
+#   POST /api/recommendations
+#   POST /api/search
+#   POST /api/forecast
+#   POST /api/transcribe
+#
+# The structure (named volumes, shared network, env wiring) is preserved so
+# AI-001-rev or a future re-split can drop service blocks back in.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mayda-ai:dev
+    container_name: mayda-ai
+    ports:
+      - "8101:8101"
+    environment:
+      SERVICE_TOKEN: ${SERVICE_TOKEN:?SERVICE_TOKEN must be set}
+      BACKEND_API_URL: ${BACKEND_API_URL:-http://host.docker.internal:8001}
+      BACKEND_API_TIMEOUT: ${BACKEND_API_TIMEOUT:-30}
+      GATEWAY_ORIGIN: ${GATEWAY_ORIGIN:-http://localhost:3000}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      PORT: 8101
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      LLM_MODEL: ${LLM_MODEL:-gemini-2.0-flash}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      WHISPER_MODEL: ${WHISPER_MODEL:-tiny}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8101/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    networks:
+      - mayda_ai_network
+    volumes:
+      - inventory_data:/data
+      - chroma_data:/chroma
+      - hf_cache:/cache/hf
+    restart: unless-stopped
+
+networks:
+  mayda_ai_network:
+    name: mayda_ai_network
+    driver: bridge
+
+volumes:
+  inventory_data:
+    name: mayda_ai_inventory_data
+  chroma_data:
+    name: mayda_ai_chroma_data
+  hf_cache:
+    name: mayda_ai_hf_cache
