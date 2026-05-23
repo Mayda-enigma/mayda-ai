@@ -1,24 +1,11 @@
 # syntax=docker/dockerfile:1.7
+#
+# Single-stage build — avoids cross-stage COPY of the 1.3 GB .venv.
+# uv sync + cleanup in one RUN so the full untrimmed venv never lands
+# in a permanent layer.
 
-# ── Builder stage: install dependencies ──
-FROM python:3.12-slim AS builder
-
-RUN pip install --no-cache-dir uv
-
-WORKDIR /app
-COPY pyproject.toml uv.lock ./
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-install-project
-COPY src ./src
-COPY alembic ./alembic
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev && \
-    uv cache prune && \
-    find /app/.venv -name '*.pyc' -delete && \
-    find /app/.venv -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
-
-# ── Runner stage: minimal runtime image ──
 FROM python:3.12-slim
+
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PORT=8101 \
@@ -31,10 +18,23 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg curl \
     && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --no-cache-dir uv
+
 WORKDIR /app
-COPY --link --from=builder /app/.venv /app/.venv
+COPY pyproject.toml uv.lock ./
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-install-project
+
 COPY src ./src
 COPY alembic ./alembic
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev && \
+    uv cache prune && \
+    pip uninstall -y uv 2>/dev/null; \
+    find /app/.venv -name '*.pyc' -delete && \
+    find /app/.venv -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null
 
 ENV PATH="/app/.venv/bin:$PATH"
 
