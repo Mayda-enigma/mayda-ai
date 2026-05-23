@@ -1,6 +1,6 @@
-# syntax=docker/dockerfile:1.6
+# syntax=docker/dockerfile:1.7
 
-# ── Builder stage: install dependencies in a virtual environment ──
+# ── Builder stage: install dependencies ──
 FROM python:3.12-slim AS builder
 
 RUN pip install --no-cache-dir uv
@@ -12,7 +12,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY src ./src
 COPY alembic ./alembic
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-dev && \
+    uv cache prune && \
+    find /app/.venv -name '*.pyc' -delete && \
+    find /app/.venv -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
 
 # ── Runner stage: minimal runtime image ──
 FROM python:3.12-slim
@@ -29,7 +32,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY --from=builder /app/.venv /app/.venv
+COPY --link --from=builder /app/.venv /app/.venv
 COPY src ./src
 COPY alembic ./alembic
 
