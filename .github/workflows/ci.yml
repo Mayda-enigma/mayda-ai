@@ -6,6 +6,14 @@ on:
   pull_request:
     branches: [main]
 
+# dorny/paths-filter calls the PRs API to list changed files, which needs
+# explicit `pull-requests: read`. Default GITHUB_TOKEN permissions don't grant
+# it on this repo, so the action fails with "Resource not accessible by
+# integration".
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   # Detect which areas of the repo changed so downstream jobs can skip cleanly
   # on docs-only commits. The original plan (AI-003) had one path per service;
