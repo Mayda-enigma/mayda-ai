@@ -24,10 +24,41 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+MODEL_VERSION = "RandomForest_v1.0"
+
 
 def _get_forecaster(request: Request) -> DatabaseIntegratedForecaster:
     """Retrieve the global DatabaseIntegratedForecaster stored in app.state."""
     return request.app.state.forecaster
+
+
+def _run_forecast(
+    forecaster: DatabaseIntegratedForecaster,
+    item_req: ForecastRequest,
+    db: Session,
+) -> ForecastResponse | None:
+    """Predict consumption for one item and shape it into ForecastResponse.
+
+    Returns None when the underlying model has no prediction (unknown item or
+    insufficient history) — the caller decides whether that's a hard 400 or
+    just gets skipped in a bulk response.
+    """
+    prediction = forecaster.predict_consumption(
+        food_item=item_req.item,
+        date=item_req.date,
+        db=db,
+        weather=item_req.weather or "sunny",
+        special_event=item_req.special_event or 0,
+    )
+    if prediction is None:
+        return None
+    return ForecastResponse(
+        item=item_req.item,
+        date=item_req.date.strftime("%Y-%m-%d"),
+        units=prediction,
+        model_version=MODEL_VERSION,
+        generated_at=datetime.now(UTC).isoformat(),
+    )
 
 
 # ── Inventory Endpoints ──
@@ -45,27 +76,13 @@ async def forecast_item(
     """
     Generate consumption forecast for a single food item.
     """
-    prediction = forecaster.predict_consumption(
-        food_item=body.item,
-        date=body.date,
-        db=db,
-        weather=body.weather or "sunny",
-        special_event=body.special_event or 0,
-    )
-
-    if prediction is None:
+    response = _run_forecast(forecaster, body, db)
+    if response is None:
         raise HTTPException(
             status_code=400,
-            detail=f"Item '{body.item}' is either not indexed or has insufficient historical records to forecast."
+            detail=f"Item '{body.item}' is either not indexed or has insufficient historical records to forecast.",
         )
-
-    return ForecastResponse(
-        item=body.item,
-        date=body.date.strftime("%Y-%m-%d"),
-        units=prediction,
-        model_version="RandomForest_v1.0",
-        generated_at=datetime.now(UTC).isoformat(),
-    )
+    return response
 
 
 @router.post(
@@ -81,26 +98,11 @@ async def forecast_bulk(
     """
     Generate bulk forecasts for multiple food items (avoiding redundant request round-trips).
     """
-    forecasts = []
-    for item_req in body.items:
-        prediction = forecaster.predict_consumption(
-            food_item=item_req.item,
-            date=item_req.date,
-            db=db,
-            weather=item_req.weather or "sunny",
-            special_event=item_req.special_event or 0,
-        )
-        if prediction is not None:
-            forecasts.append(
-                ForecastResponse(
-                    item=item_req.item,
-                    date=item_req.date.strftime("%Y-%m-%d"),
-                    units=prediction,
-                    model_version="RandomForest_v1.0",
-                    generated_at=datetime.now(UTC).isoformat(),
-                )
-            )
-
+    forecasts = [
+        resp
+        for item_req in body.items
+        if (resp := _run_forecast(forecaster, item_req, db)) is not None
+    ]
     return BulkForecastResponse(forecasts=forecasts)
 
 
