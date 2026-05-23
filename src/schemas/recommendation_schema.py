@@ -1,5 +1,5 @@
 """
-Pydantic schemas for the recommendation service.
+Pydantic schemas for the Recommendation AI.
 Matches the backend gateway contract (RC-003).
 """
 from datetime import datetime

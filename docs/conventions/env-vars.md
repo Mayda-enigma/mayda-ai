@@ -1,6 +1,6 @@
-# Standard environment variables
+# Mayda AI — environment variables
 
-Every endpoint exposed by `mayda-ai` reads its configuration from environment
+Every endpoint exposed by **Mayda AI** reads its configuration from environment
 variables (loaded via `.env` in dev, real env in prod). The following are
 **mandatory**; absence in production is a deploy-blocker.
 

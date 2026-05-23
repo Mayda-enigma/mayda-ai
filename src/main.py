@@ -1,5 +1,5 @@
 """
-FastAPI application entry point for the Recommendation Service.
+FastAPI application entry point for Mayda AI.
 """
 import logging
 from contextlib import asynccontextmanager
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: create shared httpx client + recommendation service + search service.
+    """Startup: initialize recommendation, search, inventory, and voice services.
        Shutdown: close httpx client."""
     logger.info("Starting %s v%s on port %s", settings.PROJECT_NAME, settings.VERSION, settings.PORT)
     logger.info("Backend API URL: %s", settings.BACKEND_API_URL)
@@ -108,7 +108,13 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="AI-powered meal recommendation service for Mayda",
+    description="Mayda AI — recommendation, search, inventory forecasting, and voice processing",
+    openapi_tags=[
+        {"name": "Recommendation", "description": "AI-powered dish recommendations"},
+        {"name": "Search", "description": "Semantic dish search with multilingual support"},
+        {"name": "Inventory", "description": "Consumption forecasting and restock recommendations"},
+        {"name": "Voice", "description": "Speech transcription and order parsing"},
+    ],
     lifespan=lifespan,
 )
 
@@ -140,13 +146,28 @@ async def root():
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "status": "active",
-        "endpoints": {
-            "health": "/api/health",
-            "recommendations": "/api/recommendations",
-            "search": "/api/search",
-            "forecast": "/api/forecast",
-            "transcribe": "/api/transcribe",
+        "capabilities": {
+            "Recommendation": {
+                "recommendations": "POST /api/recommendations",
+            },
+            "Search": {
+                "search": "POST /api/search",
+                "dishes_crud": "GET/PUT/DELETE /api/dishes",
+            },
+            "Inventory": {
+                "forecast": "POST /api/forecast",
+                "bulk_forecast": "POST /api/forecast/bulk",
+                "restock": "GET /api/recommendations/restock",
+                "consumption": "POST /api/consumption",
+            },
+            "Voice": {
+                "transcribe": "POST /api/transcribe",
+                "parse_chef": "POST /api/parse/chef",
+                "parse_order": "POST /api/parse/order",
+            },
         },
+        "health": "/api/health",
+        "docs": "/docs",
     }
 
 

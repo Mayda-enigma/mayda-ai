@@ -1,5 +1,5 @@
 """
-Application configuration using pydantic-settings.
+Application configuration for Mayda AI using pydantic-settings.
 Loads from environment variables and .env file.
 """
 
@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # ── Service identity ──
-    PROJECT_NAME: str = "Recommendation Service"
+    PROJECT_NAME: str = "Mayda AI"
     VERSION: str = "1.0.0"
     PORT: int = 8101
 
