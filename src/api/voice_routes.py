@@ -1,6 +1,7 @@
 """
 Voice routes — speech transcription and order parsing.
 """
+
 import logging
 import os
 import shutil
@@ -27,6 +28,7 @@ router = APIRouter(tags=["Voice"])
 
 # ── Voice Endpoints ──
 
+
 @router.post(
     "/transcribe",
     dependencies=[Depends(require_service_token)],
@@ -40,8 +42,12 @@ async def transcribe_audio(
     Transcribe raw vocal/audio files (e.g. WAV, MP3, M4A) to standard French or English text.
     Saves to a temporary file, executes Whisper STT, and cleans up.
     """
-    logger.info("Transcribe audio request received: filename=%s, content_type=%s, language=%s",
-                audio.filename, audio.content_type, language)
+    logger.info(
+        "Transcribe audio request received: filename=%s, content_type=%s, language=%s",
+        audio.filename,
+        audio.content_type,
+        language,
+    )
 
     # 1. Create a temporary file to save the uploaded audio bytes
     suffix = os.path.splitext(audio.filename)[1] if audio.filename else ".wav"
@@ -89,7 +95,7 @@ async def parse_chef_vocal_command(
                 order_number=None,
                 confidence=None,
                 matched_phrase=None,
-                message=f"❌ Commande rejetée - format ou intention incomprise: '{body.text}'"
+                message=f"❌ Commande rejetée - format ou intention incomprise: '{body.text}'",
             )
 
         return ChefParseResponse(

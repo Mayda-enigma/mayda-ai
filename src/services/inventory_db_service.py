@@ -2,6 +2,7 @@
 SQLAlchemy models and database setup for the Restaurant Inventory Forecasting System.
 Ported and refactored from mayda-ai/inventory/database.py.
 """
+
 import logging
 import os
 from collections.abc import Generator
@@ -43,9 +44,7 @@ def run_migrations() -> None:
 
     if inspector.has_table("alembic_version"):
         with engine.connect() as conn:
-            existing = conn.execute(
-                sa_text("SELECT version_num FROM alembic_version")
-            ).scalar()
+            existing = conn.execute(sa_text("SELECT version_num FROM alembic_version")).scalar()
     else:
         existing = None
 
@@ -62,6 +61,7 @@ def run_migrations() -> None:
 
 
 # ── ORM Models ──
+
 
 class FoodItem(Base):
     __tablename__ = "food_items"
@@ -157,9 +157,7 @@ class RestockRecommendation(Base):
 # Engine and Session Factory
 engine = create_engine(
     settings.INVENTORY_DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.INVENTORY_DATABASE_URL.startswith("sqlite")
-    else {},
+    connect_args={"check_same_thread": False} if settings.INVENTORY_DATABASE_URL.startswith("sqlite") else {},
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

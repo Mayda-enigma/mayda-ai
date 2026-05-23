@@ -1,6 +1,7 @@
 """
 FastAPI application entry point for Mayda AI.
 """
+
 import logging
 from contextlib import asynccontextmanager
 
@@ -34,10 +35,11 @@ logger = logging.getLogger(__name__)
 
 # ── Lifespan ──
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: initialize recommendation, search, inventory, and voice services.
-       Shutdown: close httpx client."""
+    Shutdown: close httpx client."""
     logger.info("Starting %s v%s on port %s", settings.PROJECT_NAME, settings.VERSION, settings.PORT)
     logger.info("Backend API URL: %s", settings.BACKEND_API_URL)
 

@@ -88,9 +88,15 @@ class TestSearchSchemas:
 
     def test_dish_create(self):
         dish = DishCreate(
-            id=1, name="Taco", ingredients="meat, cheese", price="9.99",
-            popularity="80", menucategory="Main", menu="Lunch",
-            restaurant_name="Taqueria", restaurant_description="Mexican food",
+            id=1,
+            name="Taco",
+            ingredients="meat, cheese",
+            price="9.99",
+            popularity="80",
+            menucategory="Main",
+            menu="Lunch",
+            restaurant_name="Taqueria",
+            restaurant_description="Mexican food",
         )
         assert dish.name == "Taco"
         assert dish.restaurant_id is None
@@ -122,9 +128,11 @@ class TestInventorySchemas:
         assert resp.units == 25.0
 
     def test_bulk_forecast(self):
-        req = BulkForecastRequest(items=[
-            ForecastRequest(item="a", date=datetime(2026, 1, 1)),
-        ])
+        req = BulkForecastRequest(
+            items=[
+                ForecastRequest(item="a", date=datetime(2026, 1, 1)),
+            ]
+        )
         assert len(req.items) == 1
 
     def test_consumption_log_input(self):

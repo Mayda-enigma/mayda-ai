@@ -7,13 +7,16 @@ from src.services.voice_order_parser import parse_order
 class TestChefParser:
     """AI accuracy tests for French chef command parsing."""
 
-    @pytest.mark.parametrize("command,expected_type,expected_order", [
-        ("commande 12 lance", "lance", "12"),
-        ("commande 5 lancé", "lance", "5"),
-        ("commande 8 lancée", "lance", "8"),
-        ("lance la commande 3", "lance", "3"),
-        ("commande numéro 7 lance", "lance", "7"),
-    ])
+    @pytest.mark.parametrize(
+        "command,expected_type,expected_order",
+        [
+            ("commande 12 lance", "lance", "12"),
+            ("commande 5 lancé", "lance", "5"),
+            ("commande 8 lancée", "lance", "8"),
+            ("lance la commande 3", "lance", "3"),
+            ("commande numéro 7 lance", "lance", "7"),
+        ],
+    )
     def test_lance_commands(self, command, expected_type, expected_order):
         result = parse_chef_command(command)
         assert result is not None, f"Expected match for: {command}"
@@ -21,14 +24,17 @@ class TestChefParser:
         assert result["order_number"] == expected_order
         assert result["confidence"] >= 65
 
-    @pytest.mark.parametrize("command,expected_type,expected_order", [
-        ("commande 12 prete", "prete", "12"),
-        ("commande 5 prête", "prete", "5"),
-        ("commande 8 prêt", "prete", "8"),
-        ("commande numéro 7 prête", "prete", "7"),
-        ("prête la commande 3", "prete", "3"),
-        ("commande 15 est prête", "prete", "15"),
-    ])
+    @pytest.mark.parametrize(
+        "command,expected_type,expected_order",
+        [
+            ("commande 12 prete", "prete", "12"),
+            ("commande 5 prête", "prete", "5"),
+            ("commande 8 prêt", "prete", "8"),
+            ("commande numéro 7 prête", "prete", "7"),
+            ("prête la commande 3", "prete", "3"),
+            ("commande 15 est prête", "prete", "15"),
+        ],
+    )
     def test_prete_commands(self, command, expected_type, expected_order):
         result = parse_chef_command(command)
         assert result is not None, f"Expected match for: {command}"
@@ -36,12 +42,15 @@ class TestChefParser:
         assert result["order_number"] == expected_order
         assert result["confidence"] >= 65
 
-    @pytest.mark.parametrize("command", [
-        "bonjour",
-        "merci",
-        "",
-        "au revoir",
-    ])
+    @pytest.mark.parametrize(
+        "command",
+        [
+            "bonjour",
+            "merci",
+            "",
+            "au revoir",
+        ],
+    )
     def test_unrelated_commands_return_none(self, command):
         result = parse_chef_command(command)
         assert result is None

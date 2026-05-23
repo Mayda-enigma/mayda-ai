@@ -1,14 +1,17 @@
 """
 Pydantic schemas for the search service.
 """
+
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 # ── Search Schemas (SR-006 backend contract) ──
 
+
 class SearchRequest(BaseModel):
     """Request body for POST /search."""
+
     query: str = Field(..., description="Query text in any language")
     restaurant_id: int | None = Field(None, description="Optional filter by restaurant ID")
     limit: int = Field(10, ge=1, le=50, description="Maximum number of results to return")
@@ -16,6 +19,7 @@ class SearchRequest(BaseModel):
 
 class SearchResultItem(BaseModel):
     """A single search result item."""
+
     dish_id: int = Field(..., description="ID of the matching dish")
     score: float = Field(..., description="Cosine similarity score (higher is more similar)")
     name: str = Field(..., description="Name of the dish")
@@ -24,14 +28,17 @@ class SearchResultItem(BaseModel):
 
 class SearchResponse(BaseModel):
     """Response body for POST /search."""
+
     results: list[SearchResultItem] = Field(default_factory=list)
     language_detected: str = Field(..., description="Detected language code (en, fr, ar, da)")
 
 
 # ── Sync / CRUD Schemas ──
 
+
 class DishCreate(BaseModel):
     """Request schema for creating a dish in search index."""
+
     id: int = Field(..., description="Unique identifier for the dish")
     name: str = Field(..., description="Name of the dish")
     ingredients: str | list[str] = Field(..., description="Ingredients list or string")
@@ -55,20 +62,24 @@ class DishUpdate(DishCreate):
 
 class DishResponse(BaseModel):
     """Standard sync response."""
+
     message: str
     dish_id: int | None = None
 
 
 # ── Legacy Search Schemas (Backwards compatibility) ──
 
+
 class SimilaritySearch(BaseModel):
     """Request body for legacy POST /dishes/search."""
+
     embedding: list[float] = Field(..., description="Vector embedding for search query")
     max_results: int | None = Field(10, description="Max results limit")
 
 
 class SimilarityResponse(BaseModel):
     """Response body for legacy POST /dishes/search."""
+
     similar_dish_ids: list[str]
     distances: list[float]
     metadata: list[dict[str, Any]]
@@ -76,10 +87,12 @@ class SimilarityResponse(BaseModel):
 
 class TextSearchRequest(BaseModel):
     """Request body for legacy POST /dishes/search-by-text."""
+
     query: str = Field(..., description="Query text")
     max_results: int | None = Field(10, description="Max results limit")
 
 
 class TextSearchResponse(BaseModel):
     """Response body for legacy POST /dishes/search-by-text."""
+
     dish_ids: list[str]

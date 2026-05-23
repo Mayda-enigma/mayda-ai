@@ -2,6 +2,7 @@
 Multilingual embedding model using LangChain for Arabic, French, English, and Darija support.
 Ported from mayda-ai/search/model.py.
 """
+
 import logging
 import re
 
@@ -50,8 +51,20 @@ class MultilingualEmbeddingModel:
             # Handle Darija (Moroccan Arabic) - it's often detected as Arabic
             # Look for common Darija words/patterns
             darija_indicators = [
-                "dyali", "dyal", "kayji", "kayn", "machi", "bach", "ghi",
-                "bzaf", "shwiya", "bghit", "fin", "fuq", "taht", "hna"
+                "dyali",
+                "dyal",
+                "kayji",
+                "kayn",
+                "machi",
+                "bach",
+                "ghi",
+                "bzaf",
+                "shwiya",
+                "bghit",
+                "fin",
+                "fuq",
+                "taht",
+                "hna",
             ]
 
             if any(word in text.lower() for word in darija_indicators):
@@ -61,7 +74,7 @@ class MultilingualEmbeddingModel:
 
         except (LangDetectException, Exception):
             # If detection fails, try to identify by script
-            if any("\u0600" <= char <= "\u06FF" for char in text):
+            if any("\u0600" <= char <= "\u06ff" for char in text):
                 return "ar"  # Arabic script
             return "en"  # Default to English
 

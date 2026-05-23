@@ -25,6 +25,7 @@ def setup_test_db():
         db.close()
     yield
     import os as _os
+
     for f in ["./test_inventory.db", "./test_inventory.db-wal", "./test_inventory.db-shm"]:
         if _os.path.exists(f):
             _os.remove(f)

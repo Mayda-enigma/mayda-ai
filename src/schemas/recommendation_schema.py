@@ -2,14 +2,17 @@
 Pydantic schemas for the Recommendation AI.
 Matches the backend gateway contract (RC-003).
 """
+
 from datetime import datetime
 
 from pydantic import BaseModel, Field
 
 # ── Request ──
 
+
 class RecommendRequest(BaseModel):
     """POST /recommendations request body — matches backend proxy contract."""
+
     user_id: int
     cart_item_ids: list[int] = Field(default_factory=list)
     time_of_day: str | None = None
@@ -19,8 +22,10 @@ class RecommendRequest(BaseModel):
 
 # ── Response ──
 
+
 class DishInfo(BaseModel):
     """Dish details embedded in a recommendation."""
+
     id: int
     name: str
     description: str = ""
@@ -32,6 +37,7 @@ class DishInfo(BaseModel):
 
 class Recommendation(BaseModel):
     """A single dish recommendation."""
+
     dish: DishInfo
     confidence_score: float = Field(ge=0.0, le=1.0)
     explanation: str = "Recommended based on your preferences"
@@ -40,6 +46,7 @@ class Recommendation(BaseModel):
 
 class RecommendResponse(BaseModel):
     """POST /recommendations response body."""
+
     user_id: int
     recommendations: list[Recommendation]
     generated_at: str = Field(default_factory=lambda: datetime.now().isoformat())

@@ -1,6 +1,7 @@
 """
 Inventory routes — consumption forecasting and restock recommendations.
 """
+
 import logging
 from datetime import UTC, datetime
 
@@ -59,6 +60,7 @@ def _run_forecast(
 
 # ── Inventory Endpoints ──
 
+
 @router.post(
     "/forecast",
     response_model=ForecastResponse,
@@ -94,11 +96,7 @@ async def forecast_bulk(
     """
     Generate bulk forecasts for multiple food items (avoiding redundant request round-trips).
     """
-    forecasts = [
-        resp
-        for item_req in body.items
-        if (resp := _run_forecast(forecaster, item_req, db)) is not None
-    ]
+    forecasts = [resp for item_req in body.items if (resp := _run_forecast(forecaster, item_req, db)) is not None]
     return BulkForecastResponse(forecasts=forecasts)
 
 

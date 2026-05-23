@@ -2,6 +2,7 @@
 French chef voice command parser logic.
 Ported and refactored from mayda-ai/voice/VoiceScript.py.
 """
+
 import logging
 import re
 from difflib import SequenceMatcher
@@ -34,10 +35,26 @@ def parse_chef_command(text: str) -> dict[str, Any] | None:
     if not numbers:
         # Detect French word numbers
         number_words = {
-            "un": "1", "deux": "2", "trois": "3", "quatre": "4", "cinq": "5",
-            "six": "6", "sept": "7", "huit": "8", "neuf": "9", "dix": "10",
-            "onze": "11", "douze": "12", "treize": "13", "quatorze": "14", "quinze": "15",
-            "seize": "16", "dix-sept": "17", "dix-huit": "18", "dix-neuf": "19", "vingt": "20"
+            "un": "1",
+            "deux": "2",
+            "trois": "3",
+            "quatre": "4",
+            "cinq": "5",
+            "six": "6",
+            "sept": "7",
+            "huit": "8",
+            "neuf": "9",
+            "dix": "10",
+            "onze": "11",
+            "douze": "12",
+            "treize": "13",
+            "quatorze": "14",
+            "quinze": "15",
+            "seize": "16",
+            "dix-sept": "17",
+            "dix-huit": "18",
+            "dix-neuf": "19",
+            "vingt": "20",
         }
 
         for word, num in number_words.items():
@@ -91,8 +108,13 @@ def parse_chef_command(text: str) -> dict[str, Any] | None:
             best_prete_similarity = sim
             best_prete_phrase = expected
 
-    logger.info("Best Lance: %s%% ('%s') | Best Prete: %s%% ('%s')",
-                best_lance_similarity, best_lance_phrase, best_prete_similarity, best_prete_phrase)
+    logger.info(
+        "Best Lance: %s%% ('%s') | Best Prete: %s%% ('%s')",
+        best_lance_similarity,
+        best_lance_phrase,
+        best_prete_similarity,
+        best_prete_phrase,
+    )
 
     # Decide action type
     if best_lance_similarity >= similarity_threshold and best_lance_similarity >= best_prete_similarity:

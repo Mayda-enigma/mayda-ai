@@ -3,6 +3,7 @@ Recommendation routes — dish recommendations powered by LLM.
 POST /recommendations — matches backend gateway contract (RC-003).
 GET  /health          — public health check.
 """
+
 from fastapi import APIRouter, Depends, Request
 
 from src.api.deps import RecommendationServiceDep
@@ -14,6 +15,7 @@ router = APIRouter(tags=["Recommendation"])
 
 # ── Public ──
 
+
 @router.get("/health")
 async def health_check():
     """Public health probe — no auth required."""
@@ -21,6 +23,7 @@ async def health_check():
 
 
 # ── Protected ──
+
 
 @router.post(
     "/recommendations",

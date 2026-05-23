@@ -1,6 +1,7 @@
 """
 Search routes — semantic dish search with multilingual support.
 """
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from src.api.deps import SearchServiceDep
@@ -22,6 +23,7 @@ router = APIRouter(tags=["Search"])
 
 # ── Search Endpoints ──
 
+
 @router.post(
     "/search",
     response_model=SearchResponse,
@@ -39,6 +41,7 @@ async def search_dishes(
 
 
 # ── CRUD Sync Endpoints (SR-007 area) ──
+
 
 @router.post(
     "/dishes",
@@ -81,6 +84,7 @@ async def delete_dish(
 
 
 # ── Database Management & Info Endpoints ──
+
 
 @router.get(
     "/dishes/info",
@@ -125,6 +129,7 @@ async def get_dish_by_id(
 
 
 # ── Legacy Search Endpoints ──
+
 
 @router.post(
     "/dishes/search",

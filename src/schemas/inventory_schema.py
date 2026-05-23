@@ -1,14 +1,17 @@
 """
 Pydantic schemas for the Inventory Forecasting Service.
 """
+
 from datetime import datetime
 
 from pydantic import BaseModel, Field
 
 # ── Single Forecast Request/Response ──
 
+
 class ForecastRequest(BaseModel):
     """Request schema for predicting daily consumption of a food item."""
+
     item: str = Field(..., description="Name of the food item, e.g., 'Chicken Breast'")
     date: datetime = Field(..., description="Target date for forecasting (ISO 8601 format)")
     weather: str | None = Field("sunny", description="Predicted weather condition ('sunny', 'rainy', 'cloudy')")
@@ -17,6 +20,7 @@ class ForecastRequest(BaseModel):
 
 class ForecastResponse(BaseModel):
     """Response schema for food item consumption forecast."""
+
     item: str = Field(..., description="Name of the food item")
     date: str = Field(..., description="Target date formatted as YYYY-MM-DD")
     units: float = Field(..., description="Predicted consumption units")
@@ -26,20 +30,25 @@ class ForecastResponse(BaseModel):
 
 # ── Bulk Forecast Request/Response ──
 
+
 class BulkForecastRequest(BaseModel):
     """Request schema for bulk forecasting."""
+
     items: list[ForecastRequest] = Field(..., description="List of individual forecast queries")
 
 
 class BulkForecastResponse(BaseModel):
     """Response schema for bulk forecasting."""
+
     forecasts: list[ForecastResponse] = Field(..., description="List of predictions")
 
 
 # ── Consumption Logging Schemas ──
 
+
 class ConsumptionLogInput(BaseModel):
     """Request schema for recording daily consumption usage."""
+
     food_item: str = Field(..., description="Name of the food item used")
     consumption: float = Field(..., ge=0.0, description="Total units consumed today")
     weather: str | None = Field("sunny", description="Weather condition today ('sunny', 'rainy', 'cloudy')")
@@ -49,5 +58,6 @@ class ConsumptionLogInput(BaseModel):
 
 class ConsumptionLogResponse(BaseModel):
     """Response schema for consumption logging."""
+
     status: str = Field("ok", description="Status of the logging operation")
     message: str = Field(..., description="Brief success message")

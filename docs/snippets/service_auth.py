@@ -3,6 +3,7 @@ Copy-paste helper: X-Service-Token validation dependency.
 
 See docs/conventions/service-token.md for the rationale.
 """
+
 import os
 
 from fastapi import Header, HTTPException

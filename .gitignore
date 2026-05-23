@@ -18,3 +18,10 @@ chroma_db/
 # OS / editor
 .DS_Store
 *.swp
+
+# Coverage
+.coverage
+.coverage.*
+
+# Scratch
+ai_issues.txt

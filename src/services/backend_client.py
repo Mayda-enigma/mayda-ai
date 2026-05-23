@@ -3,6 +3,7 @@ HTTP client for communicating with the main mayda-backend API.
 Uses httpx (replaces aiohttp per RC-006).
 Forwards X-Service-Token and X-Request-Id on every outbound call.
 """
+
 import logging
 from typing import Any
 
