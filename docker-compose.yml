@@ -34,6 +34,12 @@ services:
       WHISPER_MODEL: ${WHISPER_MODEL:-tiny}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8101/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
     networks:
       - mayda_ai_network
     volumes:
