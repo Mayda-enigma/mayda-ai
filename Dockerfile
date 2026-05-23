@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1.6
 
 # ── Builder stage: install dependencies in a virtual environment ──
-FROM ghcr.io/astral-sh/uv:latest AS uv
-
 FROM python:3.12-slim AS builder
-COPY --from=uv /uv /uvx /bin/
+
+RUN pip install --no-cache-dir uv
+
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
