@@ -7,6 +7,8 @@ import os
 from collections.abc import Generator
 from datetime import UTC, datetime
 
+from alembic.config import Config
+from alembic import command
 from sqlalchemy import (
     Boolean,
     Column,
@@ -26,6 +28,15 @@ logger = logging.getLogger(__name__)
 
 # Base class for models
 Base = declarative_base()
+
+
+def run_migrations() -> None:
+    """Apply pending Alembic migrations to the inventory database."""
+    alembic_cfg = Config()
+    alembic_cfg.set_main_option("script_location", "alembic")
+    alembic_cfg.set_main_option("sqlalchemy.url", settings.INVENTORY_DATABASE_URL)
+    command.upgrade(alembic_cfg, "head")
+    logger.info("Database migrations applied successfully.")
 
 
 # ── ORM Models ──
@@ -154,9 +165,8 @@ def init_inventory_db(db: Session) -> None:
             logger.info("Creating directory: %s", db_dir)
             os.makedirs(db_dir, exist_ok=True)
 
-    # Create tables
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database tables verified.")
+    # Apply schema migrations
+    run_migrations()
 
     # Seeding standard food items and baseline inventory metrics if empty
     existing_items = db.query(FoodItem).count()
