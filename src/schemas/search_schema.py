@@ -44,18 +44,13 @@ class DishCreate(BaseModel):
     restaurant_id: int | None = Field(None, description="Optional restaurant ID for filtering")
 
 
-class DishUpdate(BaseModel):
-    """Request schema for updating a dish in search index."""
-    id: int = Field(..., description="Unique identifier for the dish")
-    name: str = Field(..., description="Name of the dish")
-    ingredients: str | list[str] = Field(..., description="Ingredients list or string")
-    price: float | str = Field(..., description="Price of the dish")
-    popularity: float | str = Field(..., description="Popularity score")
-    menucategory: str = Field(..., description="Category of the menu item")
-    menu: str = Field(..., description="Menu name")
-    restaurant_name: str = Field(..., description="Restaurant name")
-    restaurant_description: str = Field(..., description="Restaurant description")
-    restaurant_id: int | None = Field(None, description="Optional restaurant ID for filtering")
+class DishUpdate(DishCreate):
+    """Request schema for updating a dish in the search index.
+
+    Identical shape to DishCreate — kept as a distinct class so the OpenAPI
+    schema and IDE hints make create vs update operations explicit at the
+    route layer.
+    """
 
 
 class DishResponse(BaseModel):
