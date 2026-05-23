@@ -113,7 +113,7 @@ app = FastAPI(
         {"name": "Recommendation", "description": "AI-powered dish recommendations"},
         {"name": "Search", "description": "Semantic dish search with multilingual support"},
         {"name": "Inventory", "description": "Consumption forecasting and restock recommendations"},
-        {"name": "Voice", "description": "Speech transcription and order parsing"},
+        {"name": "Voice", "description": "Speech transcription and order/chef command parsing"},
     ],
     lifespan=lifespan,
 )
