@@ -1,5 +1,5 @@
 """
-API routes for the Restaurant Inventory Forecasting Service.
+Inventory routes — consumption forecasting and restock recommendations.
 """
 import logging
 from datetime import UTC, datetime
@@ -23,7 +23,7 @@ from src.services.inventory_forecaster import DatabaseIntegratedForecaster
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(tags=["Inventory"])
 
 MODEL_VERSION = "RandomForest_v1.0"
 

@@ -1,5 +1,5 @@
 """
-API routes for the Voice Service.
+Voice routes — speech transcription and order parsing.
 """
 import logging
 import os
@@ -22,7 +22,7 @@ from src.services.voice_order_parser import parse_order
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(tags=["Voice"])
 
 
 # ── Voice Endpoints ──

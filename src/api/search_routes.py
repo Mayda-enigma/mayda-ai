@@ -1,5 +1,5 @@
 """
-API routes for the Search Service.
+Search routes — semantic dish search with multilingual support.
 """
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -17,7 +17,7 @@ from src.schemas.search_schema import (
     TextSearchResponse,
 )
 
-router = APIRouter()
+router = APIRouter(tags=["Search"])
 
 
 # ── Search Endpoints ──
