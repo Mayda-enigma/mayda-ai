@@ -29,8 +29,14 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.25.3",
     "ruff>=0.14.4",
 ]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 120
