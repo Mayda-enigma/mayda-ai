@@ -25,3 +25,21 @@ dependencies = [
     "tenacity>=9.1.4",
     "uvicorn>=0.47.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.4",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+exclude = [".venv", "data", "chroma_db"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP"]
+# E501: line length is enforced via formatter, not lint.
+# B008: FastAPI's `Depends(...)` and `Header(...)` are idiomatic call-in-default.
+# B904: `raise` without `from` is acceptable in FastAPI handlers that re-raise as HTTPException.
+ignore = ["E501", "B008", "B904"]
+

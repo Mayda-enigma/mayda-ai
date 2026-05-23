@@ -4,7 +4,7 @@ Uses httpx (replaces aiohttp per RC-006).
 Forwards X-Service-Token and X-Request-Id on every outbound call.
 """
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
@@ -22,7 +22,7 @@ class BackendAPIClient:
 
     # ── internal helpers ──
 
-    def _headers(self, request_id: Optional[str] = None) -> dict[str, str]:
+    def _headers(self, request_id: str | None = None) -> dict[str, str]:
         headers: dict[str, str] = {"Content-Type": "application/json"}
         if settings.SERVICE_TOKEN:
             headers["X-Service-Token"] = settings.SERVICE_TOKEN

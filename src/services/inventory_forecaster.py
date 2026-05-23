@@ -2,11 +2,11 @@
 Restaurant Inventory Forecasting Engine using Random Forest regression.
 Refactored from mayda-ai/inventory/forecaster_db.py.
 """
-from datetime import datetime, timedelta, timezone
 import logging
 import os
-from typing import Dict, List, Optional, Tuple, Union, Any
 import warnings
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -14,17 +14,17 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 from sqlalchemy.orm import Session
 
+from src.services.inventory_db_service import (
+    ConsumptionHistory,
+    FoodItem,
+    ForecastResult,
+    InventoryRecord,
+    RestockRecommendation,
+)
+
 # Narrow warnings filter to specific categories as per IN-008
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
-
-from src.services.inventory_db_service import (
-    FoodItem,
-    InventoryRecord,
-    ConsumptionHistory,
-    ForecastResult,
-    RestockRecommendation,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +37,9 @@ class DatabaseIntegratedForecaster:
     """
 
     def __init__(self) -> None:
-        self.models: Dict[str, RandomForestRegressor] = {}
-        self.scalers: Dict[str, StandardScaler] = {}
-        self.food_items: Dict[str, int] = {}  # Caches food name -> food ID mappings
+        self.models: dict[str, RandomForestRegressor] = {}
+        self.scalers: dict[str, StandardScaler] = {}
+        self.food_items: dict[str, int] = {}  # Caches food name -> food ID mappings
 
     def _ensure_food_items_loaded(self, db: Session) -> None:
         """Ensures food items are loaded into cash from database."""
@@ -127,7 +127,7 @@ class DatabaseIntegratedForecaster:
         self._ensure_food_items_loaded(db)
         logger.info("Updating inventory levels based on consumption history...")
 
-        end_date = datetime.now(timezone.utc)
+        end_date = datetime.now(UTC)
         start_date = end_date - timedelta(days=7)
 
         recent_consumption = (
@@ -138,7 +138,7 @@ class DatabaseIntegratedForecaster:
         )
 
         # Calculate total consumption per item
-        consumption_totals: Dict[str, float] = {}
+        consumption_totals: dict[str, float] = {}
         for record, food_name in recent_consumption:
             if food_name not in consumption_totals:
                 consumption_totals[food_name] = 0.0
@@ -160,7 +160,7 @@ class DatabaseIntegratedForecaster:
                         10.0, inventory_record.maximum_stock - total_consumed
                     )
                     inventory_record.current_stock = float(estimated_current_stock)
-                    inventory_record.last_updated = datetime.now(timezone.utc)
+                    inventory_record.last_updated = datetime.now(UTC)
                     updated_items += 1
 
         db.commit()
@@ -168,7 +168,7 @@ class DatabaseIntegratedForecaster:
 
     def load_historical_data_from_db(self, db: Session, days_back: int = 365) -> pd.DataFrame:
         """Load historical consumption data from database."""
-        end_date = datetime.now(timezone.utc)
+        end_date = datetime.now(UTC)
         start_date = end_date - timedelta(days=days_back)
 
         records = (
@@ -216,7 +216,7 @@ class DatabaseIntegratedForecaster:
 
         if inventory_record:
             inventory_record.current_stock = max(0.0, inventory_record.current_stock - consumption)
-            inventory_record.last_updated = datetime.now(timezone.utc)
+            inventory_record.last_updated = datetime.now(UTC)
             db.commit()
 
     def add_consumption_record(
@@ -227,7 +227,7 @@ class DatabaseIntegratedForecaster:
         db: Session,
         weather: str = "sunny",
         special_event: bool = False,
-        notes: Optional[str] = None,
+        notes: str | None = None,
     ) -> bool:
         """Add a single consumption record to the database."""
         self._ensure_food_items_loaded(db)
@@ -384,7 +384,7 @@ class DatabaseIntegratedForecaster:
         weather: str = "sunny",
         special_event: int = 0,
         skip_save: bool = False,
-    ) -> Optional[float]:
+    ) -> float | None:
         """Predict consumption for a specific item and date."""
         self._ensure_food_items_loaded(db)
 
@@ -478,7 +478,7 @@ class DatabaseIntegratedForecaster:
         forecast_result = ForecastResult(
             food_item_id=food_item_id,
             forecast_date=forecast_date,
-            prediction_date=datetime.now(timezone.utc),
+            prediction_date=datetime.now(UTC),
             predicted_consumption=predicted_consumption,
             model_version="RandomForest_v1.0",
         )
@@ -488,7 +488,7 @@ class DatabaseIntegratedForecaster:
 
     def generate_restock_recommendations(
         self, db: Session, days_ahead: int = 7, safety_margin: float = 0.2
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate and save restock recommendations to database."""
         self._ensure_food_items_loaded(db)
 
@@ -507,7 +507,7 @@ class DatabaseIntegratedForecaster:
 
             # Predict consumption for next N days
             daily_predictions = []
-            current_date = datetime.now(timezone.utc)
+            current_date = datetime.now(UTC)
             total_predicted_consumption = 0.0
 
             for day in range(days_ahead):
@@ -558,7 +558,7 @@ class DatabaseIntegratedForecaster:
                         db.query(RestockRecommendation)
                         .filter(
                             RestockRecommendation.food_item_id == record.food_item_id,
-                            RestockRecommendation.recommendation_date >= datetime.now(timezone.utc).date(),
+                            RestockRecommendation.recommendation_date >= datetime.now(UTC).date(),
                         )
                         .first()
                     )
@@ -605,7 +605,7 @@ class DatabaseIntegratedForecaster:
             ]
 
         data = []
-        start_date = datetime.now(timezone.utc) - timedelta(days=days)
+        start_date = datetime.now(UTC) - timedelta(days=days)
 
         for i in range(days):
             date = start_date + timedelta(days=i)

@@ -3,7 +3,8 @@ Embedding generator for dish objects using all-MiniLM-L6-v2 model.
 Ported from mayda-ai/search/generate_embeddings.py.
 """
 import logging
-from typing import Any, List, Union
+from typing import Any
+
 import numpy as np
 from sentence_transformers import SentenceTransformer
 

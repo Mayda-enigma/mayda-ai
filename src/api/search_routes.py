@@ -3,19 +3,19 @@ API routes for the Search Service.
 """
 from fastapi import APIRouter, Depends, Request
 
+from src.middleware.service_auth import require_service_token
 from src.schemas.search_schema import (
+    DishCreate,
+    DishResponse,
+    DishUpdate,
     SearchRequest,
     SearchResponse,
-    DishCreate,
-    DishUpdate,
-    DishResponse,
-    SimilaritySearch,
     SimilarityResponse,
+    SimilaritySearch,
     TextSearchRequest,
     TextSearchResponse,
 )
 from src.services.search_service import SearchService
-from src.middleware.service_auth import require_service_token
 
 router = APIRouter()
 

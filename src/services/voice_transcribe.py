@@ -4,7 +4,8 @@ Ported and refactored from mayda-ai/voice/VoiceScript.py.
 """
 import logging
 import os
-from typing import Dict, Any, Optional
+from typing import Any
+
 import whisper
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ class Transcriber:
         self.model = whisper.load_model(self.model_size)
         logger.info("Whisper model '%s' successfully loaded.", self.model_size)
 
-    def transcribe(self, audio_path: str, language: Optional[str] = None) -> Dict[str, Any]:
+    def transcribe(self, audio_path: str, language: str | None = None) -> dict[str, Any]:
         """
         Transcribes an audio file into text.
         Returns:
@@ -43,7 +44,7 @@ class Transcriber:
             raise FileNotFoundError(f"Audio file not found: {audio_path}")
 
         logger.info("Transcribing audio file: %s (language_override=%s)...", audio_path, language)
-        
+
         # Call whisper transcribe
         # By default, whisper transcribe returns a dict containing "text", "language", "segments", etc.
         transcribe_args = {}
@@ -51,7 +52,7 @@ class Transcriber:
             transcribe_args["language"] = language
 
         result = self.model.transcribe(audio_path, **transcribe_args)
-        
+
         text = result.get("text", "").strip()
         detected_lang = result.get("language", language or "unknown")
 

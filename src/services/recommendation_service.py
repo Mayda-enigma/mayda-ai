@@ -5,22 +5,22 @@ with fixes for RC-003 (contract), RC-005 (error handling), RC-006 (httpx).
 
 Supports Gemini (primary) with rule-based fallback when LLM is unavailable.
 """
+import asyncio
 import json
 import logging
-import asyncio
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from src.core.config import settings
-from src.services.backend_client import BackendAPIClient
 from src.schemas.recommendation_schema import (
+    DishInfo,
+    Recommendation,
     RecommendRequest,
     RecommendResponse,
-    Recommendation,
-    DishInfo,
 )
+from src.services.backend_client import BackendAPIClient
 
 # Conditional LLM imports
 try:
@@ -71,7 +71,7 @@ class RecommendationService:
         request_id: str | None = None,
     ) -> RecommendResponse:
         """Generate recommendations for a user (matches POST /recommendations contract)."""
-        start = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
 
         # 1. Fetch user profile
         user_profile = await self.backend.get_user_profile(req.user_id, request_id=request_id)
@@ -98,12 +98,12 @@ class RecommendationService:
         else:
             recs = self._fallback_recommendations(user_profile, available, req.limit)
 
-        elapsed = (datetime.now(timezone.utc) - start).total_seconds()
+        elapsed = (datetime.now(UTC) - start).total_seconds()
 
         return RecommendResponse(
             user_id=req.user_id,
             recommendations=recs[: req.limit],
-            generated_at=datetime.now(timezone.utc).isoformat(),
+            generated_at=datetime.now(UTC).isoformat(),
             model=self.provider,
             processing_time=round(elapsed, 3),
             total_available_dishes=len(available),
