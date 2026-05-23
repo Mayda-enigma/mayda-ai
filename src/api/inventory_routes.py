@@ -1,6 +1,7 @@
 """
-API routes for the Restaurant Inventory Forecasting Service.
+Inventory routes — consumption forecasting and restock recommendations.
 """
+
 import logging
 from datetime import UTC, datetime
 
@@ -23,7 +24,7 @@ from src.services.inventory_forecaster import DatabaseIntegratedForecaster
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(tags=["Inventory"])
 
 MODEL_VERSION = "RandomForest_v1.0"
 
@@ -58,6 +59,7 @@ def _run_forecast(
 
 
 # ── Inventory Endpoints ──
+
 
 @router.post(
     "/forecast",
@@ -94,11 +96,7 @@ async def forecast_bulk(
     """
     Generate bulk forecasts for multiple food items (avoiding redundant request round-trips).
     """
-    forecasts = [
-        resp
-        for item_req in body.items
-        if (resp := _run_forecast(forecaster, item_req, db)) is not None
-    ]
+    forecasts = [resp for item_req in body.items if (resp := _run_forecast(forecaster, item_req, db)) is not None]
     return BulkForecastResponse(forecasts=forecasts)
 
 

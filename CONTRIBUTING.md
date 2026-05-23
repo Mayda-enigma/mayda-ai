@@ -1,9 +1,8 @@
 # Contributing to `mayda-ai`
 
-This repo hosts the AI capabilities consumed by `mayda-backend`:
-recommendations, semantic search, inventory forecasting, and voice
-processing. They run as a single FastAPI application under
-[src/](src/).
+This is **Mayda AI** — the AI platform consumed by `mayda-backend`,
+exposing four AI capabilities as a single FastAPI application under
+[src/](src/): recommendation, search, inventory forecasting, and voice processing.
 
 ## Adding a new endpoint — the 5-step checklist
 
@@ -41,7 +40,7 @@ cp .env.example .env   # fill in keys
 uv run uvicorn src.main:app --reload
 ```
 
-The app exposes Swagger UI at `http://localhost:8101/docs`.
+The app exposes Swagger UI at `http://localhost:8101/docs` with endpoints grouped by capability (Recommendation, Search, Inventory, Voice).
 
 ## Architectural notes
 

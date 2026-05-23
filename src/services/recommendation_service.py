@@ -5,6 +5,7 @@ with fixes for RC-003 (contract), RC-005 (error handling), RC-006 (httpx).
 
 Supports Gemini (primary) with rule-based fallback when LLM is unavailable.
 """
+
 import asyncio
 import json
 import logging
@@ -40,6 +41,7 @@ def _dish_info_from_backend(d: dict[str, Any]) -> DishInfo:
         is_available=d.get("isAvailable", True),
         category_id=d.get("categoryId"),
     )
+
 
 # Conditional LLM imports
 try:
@@ -177,12 +179,12 @@ class RecommendationService:
         return f"""You are a restaurant recommendation expert. Recommend {req.limit} dishes for this user.
 
 USER PROFILE:
-- Name: {profile.get('user', {}).get('firstName', '')} {profile.get('user', {}).get('lastName', '')}
+- Name: {profile.get("user", {}).get("firstName", "")} {profile.get("user", {}).get("lastName", "")}
 - Preferences: {json.dumps(preferences)}
 - Total Orders: {len(recent_orders)}
 - Recent Orders: {len(recent_orders)} recent orders
 
-CONTEXT: {'; '.join(context_parts) if context_parts else 'None'}
+CONTEXT: {"; ".join(context_parts) if context_parts else "None"}
 
 AVAILABLE DISHES ({len(dish_lines)} dishes):
 {json.dumps(dish_lines, indent=2)}

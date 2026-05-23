@@ -2,6 +2,7 @@
 X-Service-Token validation middleware (AI-002 pattern).
 Rejects any request without a valid service token on protected routes.
 """
+
 from fastapi import Header, HTTPException
 
 from src.core.config import settings

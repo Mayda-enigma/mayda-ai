@@ -16,7 +16,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mayda-ai:dev
+    # image: mayda-ai:dev
     container_name: mayda-ai
     ports:
       - "8101:8101"

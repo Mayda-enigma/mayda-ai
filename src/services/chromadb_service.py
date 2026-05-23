@@ -2,6 +2,7 @@
 ChromaDB helper for vector embeddings storage and retrieval.
 Ported from mayda-ai/search/chromadb_helper.py.
 """
+
 import logging
 import os
 from typing import Any
@@ -116,11 +117,7 @@ class ChromaEmbeddingsDatabase:
 
             if results["ids"] and len(results["ids"]) > 0:
                 embedding = None
-                if (
-                    "embeddings" in results
-                    and results["embeddings"] is not None
-                    and len(results["embeddings"]) > 0
-                ):
+                if "embeddings" in results and results["embeddings"] is not None and len(results["embeddings"]) > 0:
                     embedding = (
                         results["embeddings"][0].tolist()
                         if hasattr(results["embeddings"][0], "tolist")
@@ -128,11 +125,7 @@ class ChromaEmbeddingsDatabase:
                     )
 
                 metadata = None
-                if (
-                    "metadatas" in results
-                    and results["metadatas"] is not None
-                    and len(results["metadatas"]) > 0
-                ):
+                if "metadatas" in results and results["metadatas"] is not None and len(results["metadatas"]) > 0:
                     metadata = results["metadatas"][0]
 
                 return {"id": results["ids"][0], "embedding": embedding, "metadata": metadata}

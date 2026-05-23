@@ -2,6 +2,7 @@
 Restaurant Inventory Forecasting Engine using Random Forest regression.
 Refactored from mayda-ai/inventory/forecaster_db.py.
 """
+
 import logging
 import os
 import warnings
@@ -150,15 +151,11 @@ class DatabaseIntegratedForecaster:
             food_item_id = self.food_items.get(food_name)
             if food_item_id:
                 inventory_record = (
-                    db.query(InventoryRecord)
-                    .filter(InventoryRecord.food_item_id == food_item_id)
-                    .first()
+                    db.query(InventoryRecord).filter(InventoryRecord.food_item_id == food_item_id).first()
                 )
 
                 if inventory_record:
-                    estimated_current_stock = max(
-                        10.0, inventory_record.maximum_stock - total_consumed
-                    )
+                    estimated_current_stock = max(10.0, inventory_record.maximum_stock - total_consumed)
                     inventory_record.current_stock = float(estimated_current_stock)
                     inventory_record.last_updated = datetime.now(UTC)
                     updated_items += 1
@@ -199,20 +196,14 @@ class DatabaseIntegratedForecaster:
         logger.info("Loaded %d historical records from database.", len(df))
         return df
 
-    def update_inventory_after_consumption(
-        self, food_item_name: str, consumption: float, db: Session
-    ) -> None:
+    def update_inventory_after_consumption(self, food_item_name: str, consumption: float, db: Session) -> None:
         """Update inventory levels after recording consumption."""
         self._ensure_food_items_loaded(db)
         food_item_id = self.food_items.get(food_item_name)
         if not food_item_id:
             return
 
-        inventory_record = (
-            db.query(InventoryRecord)
-            .filter(InventoryRecord.food_item_id == food_item_id)
-            .first()
-        )
+        inventory_record = db.query(InventoryRecord).filter(InventoryRecord.food_item_id == food_item_id).first()
 
         if inventory_record:
             inventory_record.current_stock = max(0.0, inventory_record.current_stock - consumption)
@@ -421,16 +412,8 @@ class DatabaseIntegratedForecaster:
             )
             consumption_30day_avg = recent_data["consumption"].mean()
 
-            consumption_lag1 = (
-                recent_data["consumption"].iloc[-1]
-                if len(recent_data) >= 1
-                else consumption_7day_avg
-            )
-            consumption_lag7 = (
-                recent_data["consumption"].iloc[-7]
-                if len(recent_data) >= 7
-                else consumption_7day_avg
-            )
+            consumption_lag1 = recent_data["consumption"].iloc[-1] if len(recent_data) >= 1 else consumption_7day_avg
+            consumption_lag7 = recent_data["consumption"].iloc[-7] if len(recent_data) >= 7 else consumption_7day_avg
         else:
             consumption_7day_avg = consumption_14day_avg = consumption_30day_avg = 20.0
             consumption_lag1 = consumption_lag7 = 20.0
@@ -494,9 +477,7 @@ class DatabaseIntegratedForecaster:
 
         # Get current inventory levels
         inventory_records = (
-            db.query(InventoryRecord, FoodItem.name)
-            .join(FoodItem, InventoryRecord.food_item_id == FoodItem.id)
-            .all()
+            db.query(InventoryRecord, FoodItem.name).join(FoodItem, InventoryRecord.food_item_id == FoodItem.id).all()
         )
 
         recommendations = {}
@@ -643,17 +624,10 @@ class DatabaseIntegratedForecaster:
 
                 daily_consumption = max(
                     0,
-                    int(
-                        base_consumption
-                        * weekend_mult
-                        * seasonal_mult
-                        * np.random.normal(1.0, 0.2)
-                    ),
+                    int(base_consumption * weekend_mult * seasonal_mult * np.random.normal(1.0, 0.2)),
                 )
 
-                weather_effect = np.random.choice(
-                    ["sunny", "rainy", "cloudy"], p=[0.6, 0.2, 0.2]
-                )
+                weather_effect = np.random.choice(["sunny", "rainy", "cloudy"], p=[0.6, 0.2, 0.2])
                 if weather_effect == "rainy":
                     daily_consumption = int(daily_consumption * 0.8)
                 elif weather_effect == "sunny":

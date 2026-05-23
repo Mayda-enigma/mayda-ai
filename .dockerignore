@@ -1,0 +1,34 @@
+# Git
+.git/
+.gitignore
+
+# Environment
+.env
+.env.example
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Tooling / IDE
+.opencode/
+node_modules/
+.DS_Store
+*.swp
+
+# Runtime data (generated at container start)
+data/
+chroma_db/
+
+# Docs (not needed at runtime)
+README.md
+CONTRIBUTING.md
+docs/
+ai_issues.txt
+
+# CI
+.github/

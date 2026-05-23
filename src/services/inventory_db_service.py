@@ -2,11 +2,13 @@
 SQLAlchemy models and database setup for the Restaurant Inventory Forecasting System.
 Ported and refactored from mayda-ai/inventory/database.py.
 """
+
 import logging
 import os
 from collections.abc import Generator
 from datetime import UTC, datetime
 
+from alembic.config import Config
 from sqlalchemy import (
     Boolean,
     Column,
@@ -17,9 +19,12 @@ from sqlalchemy import (
     String,
     Text,
     create_engine,
+    inspect,
 )
+from sqlalchemy import text as sa_text
 from sqlalchemy.orm import Session, declarative_base, relationship, sessionmaker
 
+from alembic import command
 from src.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -28,7 +33,35 @@ logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 
+def run_migrations() -> None:
+    """Apply pending Alembic migrations to the inventory database."""
+    alembic_cfg = Config()
+    alembic_cfg.set_main_option("script_location", "alembic")
+    alembic_cfg.set_main_option("sqlalchemy.url", settings.INVENTORY_DATABASE_URL)
+
+    engine = create_engine(settings.INVENTORY_DATABASE_URL)
+    inspector = inspect(engine)
+
+    if inspector.has_table("alembic_version"):
+        with engine.connect() as conn:
+            existing = conn.execute(sa_text("SELECT version_num FROM alembic_version")).scalar()
+    else:
+        existing = None
+
+    if existing is None and inspector.has_table("food_items"):
+        from alembic.script import ScriptDirectory
+
+        script = ScriptDirectory.from_config(alembic_cfg)
+        command.stamp(alembic_cfg, script.get_current_head())
+        logger.info("Stamped existing database at head migration.")
+        return
+
+    command.upgrade(alembic_cfg, "head")
+    logger.info("Database migrations applied successfully.")
+
+
 # ── ORM Models ──
+
 
 class FoodItem(Base):
     __tablename__ = "food_items"
@@ -124,9 +157,7 @@ class RestockRecommendation(Base):
 # Engine and Session Factory
 engine = create_engine(
     settings.INVENTORY_DATABASE_URL,
-    connect_args={"check_same_thread": False}
-    if settings.INVENTORY_DATABASE_URL.startswith("sqlite")
-    else {},
+    connect_args={"check_same_thread": False} if settings.INVENTORY_DATABASE_URL.startswith("sqlite") else {},
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -154,9 +185,8 @@ def init_inventory_db(db: Session) -> None:
             logger.info("Creating directory: %s", db_dir)
             os.makedirs(db_dir, exist_ok=True)
 
-    # Create tables
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database tables verified.")
+    # Apply schema migrations
+    run_migrations()
 
     # Seeding standard food items and baseline inventory metrics if empty
     existing_items = db.query(FoodItem).count()

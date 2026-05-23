@@ -2,6 +2,7 @@
 Customer voice menu order parser using SequenceMatcher fuzzy comparisons.
 Implements VC-006.
 """
+
 import logging
 import re
 from typing import Any
@@ -33,13 +34,33 @@ def parse_order(text: str, menu_items: list[dict[str, Any]]) -> list[dict[str, A
 
     number_words = {
         # English numbers
-        "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
-        "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
-        "a": 1, "an": 1,
+        "one": 1,
+        "two": 2,
+        "three": 3,
+        "four": 4,
+        "five": 5,
+        "six": 6,
+        "seven": 7,
+        "eight": 8,
+        "nine": 9,
+        "ten": 10,
+        "a": 1,
+        "an": 1,
         # French numbers
-        "un": 1, "une": 1, "deux": 2, "trois": 3, "quatre": 4, "cinq": 5,
-        "six_fr": 6, "sept": 7, "huit": 8, "neuf": 9, "dix": 10,
-        "le": 1, "la": 1, "des": 1,
+        "un": 1,
+        "une": 1,
+        "deux": 2,
+        "trois": 3,
+        "quatre": 4,
+        "cinq": 5,
+        "six_fr": 6,
+        "sept": 7,
+        "huit": 8,
+        "neuf": 9,
+        "dix": 10,
+        "le": 1,
+        "la": 1,
+        "des": 1,
     }
 
     parsed_items = []
@@ -126,15 +147,25 @@ def parse_order(text: str, menu_items: list[dict[str, Any]]) -> list[dict[str, A
 
         # Only accept matches above similarity threshold (e.g. 50%)
         if best_match and best_confidence >= 50:
-            parsed_items.append({
-                "menu_item_id": best_match["id"],
-                "menu_item_name": best_match["name"],
-                "quantity": quantity,
-                "confidence": best_confidence
-            })
-            logger.info("Matched segment '%s' -> Item '%s' (ID=%d, Qty=%d, Conf=%d%%)",
-                        segment, best_match["name"], best_match["id"], quantity, best_confidence)
+            parsed_items.append(
+                {
+                    "menu_item_id": best_match["id"],
+                    "menu_item_name": best_match["name"],
+                    "quantity": quantity,
+                    "confidence": best_confidence,
+                }
+            )
+            logger.info(
+                "Matched segment '%s' -> Item '%s' (ID=%d, Qty=%d, Conf=%d%%)",
+                segment,
+                best_match["name"],
+                best_match["id"],
+                quantity,
+                best_confidence,
+            )
         else:
-            logger.warning("Could not find a reliable match for segment '%s' (Best similarity: %d%%)", segment, best_confidence)
+            logger.warning(
+                "Could not find a reliable match for segment '%s' (Best similarity: %d%%)", segment, best_confidence
+            )
 
     return parsed_items

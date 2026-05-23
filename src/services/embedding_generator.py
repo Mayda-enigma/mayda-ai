@@ -2,6 +2,7 @@
 Embedding generator for dish objects using all-MiniLM-L6-v2 model.
 Ported from mayda-ai/search/generate_embeddings.py.
 """
+
 import logging
 from typing import Any
 
@@ -27,6 +28,7 @@ class EmbedGenerator:
         Generate embedding for a dish object. Supports both object attribute
         access and dictionary indexing.
         """
+
         # Helper to get field from dish (dictionary or object)
         def get_field(name: str, default: Any = "") -> Any:
             if isinstance(dish, dict):

@@ -4,6 +4,7 @@ Each long-lived service is built once during lifespan and attached to
 `app.state`; route handlers reach it via `Depends(...)`. Centralising the
 two-liner getters here keeps the per-route files focused on HTTP shape.
 """
+
 from typing import Annotated
 
 from fastapi import Depends, Request

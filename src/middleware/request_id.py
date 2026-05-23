@@ -3,6 +3,7 @@ X-Request-Id middleware (RC-007).
 Reads X-Request-Id from incoming request, or generates a UUID.
 Stores it on request.state.request_id and echoes it in the response header.
 """
+
 import uuid
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint

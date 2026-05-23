@@ -2,6 +2,7 @@
 Whisper-based speech transcription service.
 Ported and refactored from mayda-ai/voice/VoiceScript.py.
 """
+
 import logging
 import os
 from typing import Any
@@ -60,6 +61,7 @@ class Transcriber:
         duration = 0.0
         try:
             import soundfile as sf
+
             info = sf.info(audio_path)
             duration = info.duration
         except Exception as exc:

@@ -1,6 +1,7 @@
 """
 Orchestration service for dish search and indexing operations.
 """
+
 import logging
 from typing import Any
 
@@ -36,9 +37,7 @@ class SearchService:
         self.embed_generator = embed_generator
         self.multilingual_model = multilingual_model
 
-    async def search(
-        self, query: str, restaurant_id: int | None = None, limit: int = 10
-    ) -> SearchResponse:
+    async def search(self, query: str, restaurant_id: int | None = None, limit: int = 10) -> SearchResponse:
         """
         Search for dishes by natural language query (Arabic, French, English, Darija).
         Supports filtering by restaurant_id and returns similarity scores.
@@ -211,9 +210,7 @@ class SearchService:
 
     # ── Legacy Search Wrappers ──
 
-    async def search_similar_dishes(
-        self, query_vector: list[float], max_results: int = 10
-    ) -> dict[str, Any]:
+    async def search_similar_dishes(self, query_vector: list[float], max_results: int = 10) -> dict[str, Any]:
         """Legacy similar dishes vector query search."""
         return self.chroma_db.search_similar(query_vector=query_vector, n_results=max_results)
 
