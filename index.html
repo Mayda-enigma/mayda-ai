@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mayda AI - API Testing UI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            display: flex;
+            min-height: 500px;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .main {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            max-height: calc(100vh - 180px);
+        }
+
+        .config-section {
+            margin-bottom: 20px;
+        }
+
+        .config-section label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .config-section input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .config-section input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .endpoint {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-size: 13px;
+            background: white;
+        }
+
+        .endpoint:hover {
+            background: #f0f2f5;
+            transform: translateX(4px);
+        }
+
+        .endpoint.active {
+            background: #667eea;
+            color: white;
+            border-left-color: #764ba2;
+        }
+
+        .endpoint.get {
+            --color: #61affe;
+        }
+
+        .endpoint.post {
+            --color: #49cc90;
+        }
+
+        .endpoint.put {
+            --color: #fca130;
+        }
+
+        .endpoint.delete {
+            --color: #f93e3e;
+        }
+
+        .method-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-right: 6px;
+            background: var(--color);
+            color: white;
+        }
+
+        .endpoint-details {
+            display: none;
+        }
+
+        .endpoint-details.active {
+            display: block;
+        }
+
+        .endpoint-header {
+            margin-bottom: 24px;
+        }
+
+        .endpoint-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 8px;
+        }
+
+        .endpoint-path {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            color: #6c757d;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .endpoint-description {
+            font-size: 13px;
+            color: #6c757d;
+            line-height: 1.6;
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            font-family: 'Monaco', 'Menlo', monospace;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #f0f2f5;
+            color: #495057;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .response-section {
+            margin-top: 24px;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .response-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.loading {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .response-content {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            color: #212529;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-banner {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #1565c0;
+            margin-bottom: 16px;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e9ecef;
+            margin: 16px 0;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+                max-height: 250px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ Mayda AI</h1>
+            <p>API Testing Interface</p>
+        </div>
+
+        <div class="content">
+            <div class="sidebar">
+                <div class="config-section">
+                    <label>API URL</label>
+                    <input type="text" id="apiUrl" value="http://localhost:8000/api" placeholder="http://localhost:8000/api">
+                </div>
+
+                <div class="config-section">
+                    <label>Service Token (for protected endpoints)</label>
+                    <input type="password" id="serviceToken" placeholder="Your service token here">
+                </div>
+
+                <div class="divider"></div>
+
+                <h3 style="font-size: 12px; font-weight: 600; color: #495057; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Endpoints</h3>
+
+                <div class="endpoint active" onclick="selectEndpoint(this, 'health')">
+                    <span class="method-badge" style="--color: #61affe;">GET</span>
+                    <span>/health</span>
+                </div>
+
+                <h3 style="font-size: 11px; font-weight: 600; color: #6c757d; margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Recommendation</h3>
+                <div class="endpoint" onclick="selectEndpoint(this, 'recommend')">
+                    <span class="method-badge" style="--color: #49cc90;">POST</span>
+                    <span>/recommendations</span>
+                </div>
+
+                <h3 style="font-size: 11px; font-weight: 600; color: #6c757d; margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Search</h3>
+                <div class="endpoint" onclick="selectEndpoint(this, 'search')">
+                    <span class="method-badge" style="--color: #49cc90;">POST</span>
+                    <span>/search</span>
+                </div>
+                <div class="endpoint" onclick="selectEndpoint(this, 'createDish')">
+                    <span class="method-badge" style="--color: #49cc90;">POST</span>
+                    <span>/dishes</span>
+                </div>
+
+                <h3 style="font-size: 11px; font-weight: 600; color: #6c757d; margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Inventory</h3>
+                <div class="endpoint" onclick="selectEndpoint(this, 'forecast')">
+                    <span class="method-badge" style="--color: #49cc90;">POST</span>
+                    <span>/forecast</span>
+                </div>
+                <div class="endpoint" onclick="selectEndpoint(this, 'forecastBulk')">
+                    <span class="method-badge" style="--color: #49cc90;">POST</span>
+                    <span>/forecast/bulk</span>
+                </div>
+
+                <h3 style="font-size: 11px; font-weight: 600; color: #6c757d; margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Voice</h3>
+                <div class="endpoint" onclick="selectEndpoint(this, 'parseChef')">
+                    <span class="method-badge" style="--color: #49cc90;">POST</span>
+                    <span>/parse/chef</span>
+                </div>
+
+                <h3 style="font-size: 11px; font-weight: 600; color: #6c757d; margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Nutrition</h3>
+                <div class="endpoint" onclick="selectEndpoint(this, 'nutrition')">
+                    <span class="method-badge" style="--color: #49cc90;">POST</span>
+                    <span>/nutrition/analyze</span>
+                </div>
+            </div>
+
+            <div class="main">
+                <!-- Health Endpoint -->
+                <div class="endpoint-details active" id="health">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title"><span class="method-badge" style="--color: #61affe;">GET</span> Health Check</div>
+                        <div class="endpoint-path">GET /health</div>
+                        <div class="endpoint-description">Public health probe — no authentication required.</div>
+                    </div>
+
+                    <div class="section">
+                        <button class="btn btn-primary" onclick="makeRequest('health', 'GET', '/health')">
+                            <span class="loading" id="health-loading" style="display: none;"></span>
+                            Send Request
+                        </button>
+                    </div>
+
+                    <div class="response-section">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="status-badge" id="health-status" style="display: none;"></span>
+                        </div>
+                        <div class="response-content" id="health-response">Make a request to see the response...</div>
+                    </div>
+                </div>
+
+                <!-- Recommendation Endpoint -->
+                <div class="endpoint-details" id="recommend">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title"><span class="method-badge" style="--color: #49cc90;">POST</span> Generate Recommendations</div>
+                        <div class="endpoint-path">POST /recommendations</div>
+                        <div class="endpoint-description">Generate AI-powered recommendations for a user. Requires authentication.</div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">Request Body</div>
+                        <div class="form-group">
+                            <label>User ID</label>
+                            <input type="text" id="recommend-user-id" placeholder="user123">
+                        </div>
+                        <div class="form-group">
+                            <label>Preferences (JSON)</label>
+                            <textarea id="recommend-preferences" placeholder='{"dietary_restrictions": ["vegan"]}'></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="makeRequest('recommend', 'POST', '/recommendations', {'user_id': document.getElementById('recommend-user-id').value, 'preferences': JSON.parse(document.getElementById('recommend-preferences').value || '{}')})">
+                            <span class="loading" id="recommend-loading" style="display: none;"></span>
+                            Send Request
+                        </button>
+                    </div>
+
+                    <div class="response-section">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="status-badge" id="recommend-status" style="display: none;"></span>
+                        </div>
+                        <div class="response-content" id="recommend-response">Make a request to see the response...</div>
+                    </div>
+                </div>
+
+                <!-- Search Endpoint -->
+                <div class="endpoint-details" id="search">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title"><span class="method-badge" style="--color: #49cc90;">POST</span> Search Dishes</div>
+                        <div class="endpoint-path">POST /search</div>
+                        <div class="endpoint-description">Search for dishes by natural language query in Arabic, French, English, or Darija. Requires authentication.</div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">Request Body</div>
+                        <div class="form-group">
+                            <label>Query</label>
+                            <input type="text" id="search-query" placeholder="e.g., 'spicy vegetarian dishes'">
+                        </div>
+                        <div class="form-group">
+                            <label>Restaurant ID (optional)</label>
+                            <input type="text" id="search-restaurant-id" placeholder="12345">
+                        </div>
+                        <div class="form-group">
+                            <label>Limit</label>
+                            <input type="number" id="search-limit" value="10" min="1">
+                        </div>
+                        <button class="btn btn-primary" onclick="makeRequest('search', 'POST', '/search', {'query': document.getElementById('search-query').value, 'restaurant_id': document.getElementById('search-restaurant-id').value || null, 'limit': parseInt(document.getElementById('search-limit').value)})">
+                            <span class="loading" id="search-loading" style="display: none;"></span>
+                            Send Request
+                        </button>
+                    </div>
+
+                    <div class="response-section">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="status-badge" id="search-status" style="display: none;"></span>
+                        </div>
+                        <div class="response-content" id="search-response">Make a request to see the response...</div>
+                    </div>
+                </div>
+
+                <!-- Create Dish Endpoint -->
+                <div class="endpoint-details" id="createDish">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title"><span class="method-badge" style="--color: #49cc90;">POST</span> Create Dish</div>
+                        <div class="endpoint-path">POST /dishes</div>
+                        <div class="endpoint-description">Index a new dish in the search database. Requires authentication.</div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">Request Body</div>
+                        <div class="form-group">
+                            <label>Dish Name</label>
+                            <input type="text" id="dish-name" placeholder="Tagine">
+                        </div>
+                        <div class="form-group">
+                            <label>Restaurant ID</label>
+                            <input type="text" id="dish-restaurant-id" placeholder="12345">
+                        </div>
+                        <div class="form-group">
+                            <label>Description (JSON)</label>
+                            <textarea id="dish-description" placeholder='{"price": 15.99, "ingredients": ["chicken", "spices"]}'></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="makeRequest('createDish', 'POST', '/dishes', {'name': document.getElementById('dish-name').value, 'restaurant_id': document.getElementById('dish-restaurant-id').value, 'description': JSON.parse(document.getElementById('dish-description').value || '{}')})">
+                            <span class="loading" id="createDish-loading" style="display: none;"></span>
+                            Send Request
+                        </button>
+                    </div>
+
+                    <div class="response-section">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="status-badge" id="createDish-status" style="display: none;"></span>
+                        </div>
+                        <div class="response-content" id="createDish-response">Make a request to see the response...</div>
+                    </div>
+                </div>
+
+                <!-- Forecast Endpoint -->
+                <div class="endpoint-details" id="forecast">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title"><span class="method-badge" style="--color: #49cc90;">POST</span> Forecast Item</div>
+                        <div class="endpoint-path">POST /forecast</div>
+                        <div class="endpoint-description">Generate consumption forecast for a single food item. Requires authentication.</div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">Request Body</div>
+                        <div class="form-group">
+                            <label>Item Name</label>
+                            <input type="text" id="forecast-item" placeholder="tomatoes">
+                        </div>
+                        <div class="form-group">
+                            <label>Date (YYYY-MM-DD)</label>
+                            <input type="date" id="forecast-date">
+                        </div>
+                        <div class="form-group">
+                            <label>Weather (optional)</label>
+                            <select id="forecast-weather">
+                                <option value="">Select weather...</option>
+                                <option value="sunny">Sunny</option>
+                                <option value="rainy">Rainy</option>
+                                <option value="cloudy">Cloudy</option>
+                                <option value="snowy">Snowy</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Special Event (0 or 1)</label>
+                            <input type="number" id="forecast-event" value="0" min="0" max="1">
+                        </div>
+                        <button class="btn btn-primary" onclick="makeRequest('forecast', 'POST', '/forecast', {'item': document.getElementById('forecast-item').value, 'date': document.getElementById('forecast-date').value, 'weather': document.getElementById('forecast-weather').value || null, 'special_event': parseInt(document.getElementById('forecast-event').value)})">
+                            <span class="loading" id="forecast-loading" style="display: none;"></span>
+                            Send Request
+                        </button>
+                    </div>
+
+                    <div class="response-section">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="status-badge" id="forecast-status" style="display: none;"></span>
+                        </div>
+                        <div class="response-content" id="forecast-response">Make a request to see the response...</div>
+                    </div>
+                </div>
+
+                <!-- Forecast Bulk Endpoint -->
+                <div class="endpoint-details" id="forecastBulk">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title"><span class="method-badge" style="--color: #49cc90;">POST</span> Forecast Bulk</div>
+                        <div class="endpoint-path">POST /forecast/bulk</div>
+                        <div class="endpoint-description">Generate bulk forecasts for multiple food items. Requires authentication.</div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">Request Body</div>
+                        <div class="form-group">
+                            <label>Items (JSON Array)</label>
+                            <textarea id="forecastBulk-items" placeholder='[{"item": "tomatoes", "date": "2024-05-25", "weather": "sunny", "special_event": 0}]'></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="makeRequest('forecastBulk', 'POST', '/forecast/bulk', {'items': JSON.parse(document.getElementById('forecastBulk-items').value || '[]')})">
+                            <span class="loading" id="forecastBulk-loading" style="display: none;"></span>
+                            Send Request
+                        </button>
+                    </div>
+
+                    <div class="response-section">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="status-badge" id="forecastBulk-status" style="display: none;"></span>
+                        </div>
+                        <div class="response-content" id="forecastBulk-response">Make a request to see the response...</div>
+                    </div>
+                </div>
+
+                <!-- Parse Chef Endpoint -->
+                <div class="endpoint-details" id="parseChef">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title"><span class="method-badge" style="--color: #49cc90;">POST</span> Parse Chef Command</div>
+                        <div class="endpoint-path">POST /parse/chef</div>
+                        <div class="endpoint-description">Parse French chef instructions using fuzzy matching. Requires authentication.</div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">Request Body</div>
+                        <div class="form-group">
+                            <label>Chef Command</label>
+                            <input type="text" id="parseChef-text" placeholder="e.g., 'commande 15 lance'">
+                        </div>
+                        <button class="btn btn-primary" onclick="makeRequest('parseChef', 'POST', '/parse/chef', {'text': document.getElementById('parseChef-text').value})">
+                            <span class="loading" id="parseChef-loading" style="display: none;"></span>
+                            Send Request
+                        </button>
+                    </div>
+
+                    <div class="response-section">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="status-badge" id="parseChef-status" style="display: none;"></span>
+                        </div>
+                        <div class="response-content" id="parseChef-response">Make a request to see the response...</div>
+                    </div>
+                </div>
+
+                <!-- Nutrition Analyze Endpoint -->
+                <div class="endpoint-details" id="nutrition">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title"><span class="method-badge" style="--color: #49cc90;">POST</span> Analyze Food Image</div>
+                        <div class="endpoint-path">POST /nutrition/analyze</div>
+                        <div class="endpoint-description">Analyze a food image and estimate its nutritional content. Accepts JPEG, PNG, WebP, or GIF (max 10 MB).</div>
+                    </div>
+
+                    <div class="info-banner">
+                        ℹ️ Note: This endpoint accepts file uploads. Estimates are approximations based on visual analysis.
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">Upload Image</div>
+                        <div class="form-group">
+                            <label>Select Food Image</label>
+                            <input type="file" id="nutrition-image" accept="image/jpeg,image/png,image/webp,image/gif">
+                        </div>
+                        <button class="btn btn-primary" onclick="makeRequest('nutrition', 'POST', '/nutrition/analyze', null, true)">
+                            <span class="loading" id="nutrition-loading" style="display: none;"></span>
+                            Analyze Image
+                        </button>
+                    </div>
+
+                    <div class="response-section">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="status-badge" id="nutrition-status" style="display: none;"></span>
+                        </div>
+                        <div class="response-content" id="nutrition-response">Make a request to see the response...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function selectEndpoint(element, endpointId) {
+            document.querySelectorAll('.endpoint').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.endpoint-details').forEach(e => e.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById(endpointId).classList.add('active');
+        }
+
+        async function makeRequest(endpointId, method, path, body = null, isFileUpload = false) {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const serviceToken = document.getElementById('serviceToken').value;
+            const loadingSpinner = document.getElementById(`${endpointId}-loading`);
+            const statusBadge = document.getElementById(`${endpointId}-status`);
+            const responseDiv = document.getElementById(`${endpointId}-response`);
+
+            loadingSpinner.style.display = 'inline-block';
+            statusBadge.style.display = 'none';
+
+            try {
+                const url = `${apiUrl}${path}`;
+                const options = {
+                    method: method,
+                    headers: {}
+                };
+
+                if (serviceToken) {
+                    options.headers['X-Service-Token'] = serviceToken;
+                }
+
+                if (isFileUpload && endpointId === 'nutrition') {
+                    const fileInput = document.getElementById('nutrition-image');
+                    if (!fileInput.files.length) {
+                        throw new Error('Please select an image file');
+                    }
+
+                    const formData = new FormData();
+                    formData.append('image', fileInput.files[0]);
+                    options.body = formData;
+                } else if (body && method !== 'GET') {
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(url, options);
+                const data = await response.json().catch(() => response.text());
+
+                loadingSpinner.style.display = 'none';
+                statusBadge.style.display = 'inline-block';
+
+                if (response.ok) {
+                    statusBadge.textContent = `✓ ${response.status}`;
+                    statusBadge.className = 'status-badge success';
+                    responseDiv.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    statusBadge.textContent = `✗ ${response.status}`;
+                    statusBadge.className = 'status-badge error';
+                    responseDiv.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                loadingSpinner.style.display = 'none';
+                statusBadge.style.display = 'inline-block';
+                statusBadge.textContent = '✗ Error';
+                statusBadge.className = 'status-badge error';
+                responseDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Set today's date as default for forecast
+        document.getElementById('forecast-date').valueAsDate = new Date();
+    </script>
+</body>
+</html>

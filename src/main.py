@@ -39,65 +39,24 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: initialize recommendation, search, inventory, and voice services.
+    """Startup: initialize HTTP client only. Services are lazy-loaded.
     Shutdown: close httpx client."""
     logger.info("Starting %s v%s on port %s", settings.PROJECT_NAME, settings.VERSION, settings.PORT)
     logger.info("Backend API URL: %s", settings.BACKEND_API_URL)
 
     # Shared async HTTP client — reused across all requests
     http_client = httpx.AsyncClient()
-    backend = BackendAPIClient(http_client)
-    rec_service = RecommendationService(backend)
-
-    # Initialize Search Service components
-    chroma_db = ChromaEmbeddingsDatabase(
-        persist_directory=settings.CHROMA_DB_DIR,
-        collection_name=settings.CHROMA_COLLECTION_NAME,
-    )
-    chroma_db.initialize_database()
-    embed_gen = EmbedGenerator()
-    multi_embed = MultilingualEmbeddingModel()
-
-    search_service = SearchService(
-        chroma_db=chroma_db,
-        embed_generator=embed_gen,
-        multilingual_model=multi_embed,
-    )
-
-    # Initialize Inventory database and seed values if empty
-    db_session = SessionLocal()
-    try:
-        init_inventory_db(db_session)
-    finally:
-        db_session.close()
-
-    # Initialize and load/train Inventory Forecaster models (joblib persistence)
-    forecaster = DatabaseIntegratedForecaster()
-    loaded_cached = forecaster.load_models(settings.INVENTORY_MODEL_PATH)
-    if not loaded_cached:
-        logger.info("No cached inventory models found. Training from historical data/generating seed data...")
-        db_session = SessionLocal()
-        try:
-            forecaster.train_models(db_session, use_database=True)
-            forecaster.save_models(settings.INVENTORY_MODEL_PATH)
-        finally:
-            db_session.close()
-
+    
     # Store on app.state so routes can access via Depends
     app.state.http_client = http_client
-    app.state.recommendation_service = rec_service
-    app.state.search_service = search_service
-    app.state.forecaster = forecaster
+    
+    # Services will be initialized lazily on first use
+    app.state.recommendation_service = None
+    app.state.search_service = None
+    app.state.forecaster = None
+    app.state.transcriber = None
 
-    # Eager Whisper Transcriber instantiation
-    transcriber = Transcriber(model_size=settings.WHISPER_MODEL)
-    transcriber.initialize_model()
-    app.state.transcriber = transcriber
-
-    logger.info("Recommendation service ready (LLM provider: %s)", rec_service.provider)
-    logger.info("Search service ready (ChromaDB collection: %s)", settings.CHROMA_COLLECTION_NAME)
-    logger.info("Inventory forecaster service ready (persisted at: %s)", settings.INVENTORY_MODEL_PATH)
-    logger.info("Voice transcriber ready (Whisper model: %s)", settings.WHISPER_MODEL)
+    logger.info("FastAPI initialized with lazy service loading")
 
     yield
 
