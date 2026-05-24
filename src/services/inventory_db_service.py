@@ -197,20 +197,15 @@ def init_inventory_db(db: Session) -> None:
     logger.info("Pre-populating standard food items...")
     food_items_data = [
         {"name": "Chicken Breast", "category": "Meat", "unit": "kg"},
-        {"name": "Beef Steak", "category": "Meat", "unit": "kg"},
-        {"name": "Salmon", "category": "Fish", "unit": "kg"},
+        {"name": "Beef Tenderloin", "category": "Meat", "unit": "kg"},
+        {"name": "Salmon Fillet", "category": "Fish", "unit": "kg"},
         {"name": "Pasta", "category": "Carbs", "unit": "kg"},
-        {"name": "Rice", "category": "Carbs", "unit": "kg"},
         {"name": "Tomatoes", "category": "Vegetables", "unit": "kg"},
-        {"name": "Onions", "category": "Vegetables", "unit": "kg"},
-        {"name": "Lettuce", "category": "Vegetables", "unit": "kg"},
-        {"name": "Cheese", "category": "Dairy", "unit": "kg"},
-        {"name": "Bread", "category": "Bakery", "unit": "units"},
-        {"name": "Potatoes", "category": "Vegetables", "unit": "kg"},
-        {"name": "Carrots", "category": "Vegetables", "unit": "kg"},
-        {"name": "Bell Peppers", "category": "Vegetables", "unit": "kg"},
-        {"name": "Mushrooms", "category": "Vegetables", "unit": "kg"},
-        {"name": "Garlic", "category": "Spices", "unit": "kg"},
+        {"name": "Fresh Mozzarella", "category": "Dairy", "unit": "kg"},
+        {"name": "Olive Oil", "category": "Condiments", "unit": "liters"},
+        {"name": "Mint Leaves", "category": "Herbs", "unit": "kg"},
+        {"name": "Shrimp", "category": "Fish", "unit": "kg"},
+        {"name": "Basil", "category": "Herbs", "unit": "kg"},
     ]
 
     for item_data in food_items_data:
