@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     # ── Voice configuration ──
     WHISPER_MODEL: str = "tiny"
 
+    # ── Nutrition Agent configuration ──
+    NUTRITION_AGENT_ENABLED: bool = True
+    NUTRITION_GEMINI_MODEL: str = "gemini-2.5-flash"
+    NUTRITION_GEMINI_TEMPERATURE: float = 0.1
+    NUTRITION_GEMINI_MAX_TOKENS: int = 4096
+    NUTRITION_MAX_IMAGE_SIZE_MB: int = 10
+
     # ── Logging ──
     LOG_LEVEL: str = "INFO"
 

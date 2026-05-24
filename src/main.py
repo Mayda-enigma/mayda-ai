@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.inventory_routes import router as inventory_router
+from src.api.nutrition_routes import router as nutrition_router
 from src.api.routes import router
 from src.api.search_routes import router as search_router
 from src.api.voice_routes import router as voice_router
@@ -116,6 +117,7 @@ app = FastAPI(
         {"name": "Search", "description": "Semantic dish search with multilingual support"},
         {"name": "Inventory", "description": "Consumption forecasting and restock recommendations"},
         {"name": "Voice", "description": "Speech transcription and order/chef command parsing"},
+        {"name": "Nutrition", "description": "Food image analysis with calorie and macro estimation"},
     ],
     lifespan=lifespan,
 )
@@ -140,6 +142,7 @@ app.include_router(router, prefix="/api")
 app.include_router(search_router, prefix="/api")
 app.include_router(inventory_router, prefix="/api")
 app.include_router(voice_router, prefix="/api")
+app.include_router(nutrition_router, prefix="/api")
 
 
 @app.get("/")
