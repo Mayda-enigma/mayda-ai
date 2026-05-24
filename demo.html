@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mayda AI — Nutrition Vision Agent</title>
+<style>
+  :root {
+    --bg: #0f0f14;
+    --surface: #1a1a24;
+    --surface2: #22222e;
+    --border: #2a2a3a;
+    --text: #e4e4ec;
+    --text2: #9494a8;
+    --accent: #a78bfa;
+    --accent2: #7c3aed;
+    --green: #34d399;
+    --yellow: #fbbf24;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --orange: #fb923c;
+    --pink: #f472b6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 24px;
+  }
+  .app {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 32px 0 8px;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header p {
+    color: var(--text2);
+    font-size: 14px;
+    margin-top: 6px;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: var(--surface2);
+    color: var(--accent);
+    margin-top: 10px;
+    border: 1px solid var(--border);
+  }
+
+  /* Config bar */
+  .config {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .config input {
+    flex: 1;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  }
+  .config input:focus { outline: none; border-color: var(--accent); }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface);
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: var(--surface2);
+  }
+  .upload-zone.has-image {
+    padding: 16px;
+  }
+  .upload-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    opacity: 0.6;
+  }
+  .upload-zone h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .upload-zone p {
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .upload-zone input[type=file] { display: none; }
+
+  /* Preview */
+  .preview {
+    display: none;
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    max-height: 300px;
+  }
+  .preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .preview .change-btn {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .upload-zone.has-image .upload-prompt { display: none; }
+  .upload-zone.has-image .preview { display: block; }
+
+  /* Analyze button */
+  .analyze-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+  }
+  .analyze-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
+  }
+  .analyze-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Loading */
+  .loading-overlay {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 32px;
+  }
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .steps {
+    display: flex;
+    gap: 24px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .steps .step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .steps .step .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .steps .step.active .dot { background: var(--accent); }
+  .steps .step.done .dot { background: var(--green); }
+  .steps .step.active { color: var(--text); }
+
+  /* Error */
+  .error-box {
+    display: none;
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+    color: var(--red);
+    font-size: 13px;
+  }
+
+  /* Results */
+  .results { display: none; flex-direction: column; gap: 20px; }
+
+  .hero-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+  }
+  .hero-card .dish-name {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .hero-card .cuisine {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 20px;
+  }
+  .calorie-number {
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .calorie-label {
+    font-size: 12px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .confidence-chip {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 4px 14px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .confidence-chip.high { background: rgba(52, 211, 153, 0.15); color: var(--green); }
+  .confidence-chip.medium { background: rgba(251, 191, 36, 0.15); color: var(--yellow); }
+  .confidence-chip.low { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+
+  /* Macro card */
+  .macro-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .macro-card h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text2);
+    margin-bottom: 18px;
+  }
+  .macro-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .macro-row:last-child { margin-bottom: 0; }
+  .macro-label {
+    width: 80px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+  .macro-value {
+    width: 56px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .macro-bar-wrap {
+    flex: 1;
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .macro-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+  .macro-bar.protein { background: var(--blue); }
+  .macro-bar.carbs { background: var(--orange); }
+  .macro-bar.fat { background: var(--pink); }
+  .macro-bar.fiber { background: var(--green); }
+  .macro-bar.sugar { background: var(--yellow); }
+  .macro-bar.sodium { background: var(--accent); }
+
+  /* Components */
+  .components-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .components-card h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text2);
+    margin-bottom: 16px;
+  }
+  .component {
+    padding: 14px;
+    border-radius: 10px;
+    background: var(--surface2);
+    margin-bottom: 10px;
+  }
+  .component:last-child { margin-bottom: 0; }
+  .component-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .component-name {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .component-calories {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .component-details {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .component-details span {
+    background: var(--surface);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  /* Health flags */
+  .flags-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .flags-card h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text2);
+    margin-bottom: 12px;
+  }
+  .flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .flag {
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(248, 113, 113, 0.1);
+    color: var(--red);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+  }
+
+  /* Disclaimer */
+  .disclaimer {
+    font-size: 11px;
+    color: var(--text2);
+    text-align: center;
+    opacity: 0.7;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Nutrition Vision Agent</h1>
+    <p>Upload a food photo — AI identifies dishes and estimates nutrition</p>
+    <span class="badge">Gemini 2.5 Flash</span>
+  </div>
+
+  <div class="config">
+    <input type="text" id="apiUrl" value="/api" placeholder="API URL">
+  </div>
+
+  <div class="upload-zone" id="uploadZone">
+    <div class="upload-prompt">
+      <div class="upload-icon">📸</div>
+      <h3>Drop a food photo here</h3>
+      <p>or click to browse — JPEG, PNG, WebP, GIF</p>
+    </div>
+    <div class="preview" id="preview">
+      <img id="previewImg" src="" alt="Preview">
+      <button class="change-btn" onclick="event.stopPropagation(); resetImage()">Change</button>
+    </div>
+    <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/gif">
+  </div>
+
+  <button class="analyze-btn" id="analyzeBtn" disabled>Analyze Image</button>
+
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <div class="steps">
+      <span class="step" id="step1"><span class="dot"></span> Identifying foods</span>
+      <span class="step" id="step2"><span class="dot"></span> Estimating nutrition</span>
+      <span class="step" id="step3"><span class="dot"></span> Reviewing results</span>
+    </div>
+  </div>
+
+  <div class="error-box" id="error"></div>
+
+  <div class="results" id="results"></div>
+  <div class="disclaimer" id="disclaimer" style="display:none"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const API = () => $('apiUrl').value;
+
+let selectedFile = null;
+
+// ── Upload zone events ──
+const zone = $('uploadZone');
+const fileInput = $('fileInput');
+
+zone.addEventListener('click', () => fileInput.click());
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('drag-over');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length) handleFile(fileInput.files[0]);
+});
+
+function handleFile(file) {
+  if (!file.type.startsWith('image/')) return;
+  selectedFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    $('previewImg').src = e.target.result;
+    zone.classList.add('has-image');
+    $('analyzeBtn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetImage() {
+  selectedFile = null;
+  $('previewImg').src = '';
+  zone.classList.remove('has-image');
+  $('analyzeBtn').disabled = true;
+  fileInput.value = '';
+}
+
+// ── Analyze ──
+$('analyzeBtn').addEventListener('click', analyze);
+
+async function analyze() {
+  if (!selectedFile) return;
+
+  // Show loading
+  $('results').style.display = 'none';
+  $('error').style.display = 'none';
+  $('disclaimer').style.display = 'none';
+  $('loading').style.display = 'flex';
+  $('analyzeBtn').disabled = true;
+
+  // Animate steps
+  const steps = [$('step1'), $('step2'), $('step3')];
+  let stepIdx = 0;
+  const stepTimer = setInterval(() => {
+    if (stepIdx > 0) steps[stepIdx - 1].classList.replace('active', 'done');
+    if (stepIdx < steps.length) steps[stepIdx].classList.add('active');
+    stepIdx++;
+  }, 2000);
+
+  try {
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+
+    const res = await fetch(`${API()}/nutrition/analyze`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    clearInterval(stepTimer);
+    steps.forEach(s => { s.classList.remove('active'); if (stepIdx >= 3) s.classList.add('done'); });
+    $('loading').style.display = 'none';
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      showError(err.detail || `Request failed with status ${res.status}`);
+      $('analyzeBtn').disabled = false;
+      return;
+    }
+
+    const report = await res.json();
+    renderResults(report);
+    $('analyzeBtn').disabled = false;
+  } catch (e) {
+    clearInterval(stepTimer);
+    $('loading').style.display = 'none';
+    showError(`Network error: ${e.message}. Is the API running?`);
+    $('analyzeBtn').disabled = false;
+  }
+}
+
+function showError(msg) {
+  $('error').textContent = msg;
+  $('error').style.display = 'block';
+}
+
+// ── Render ──
+function renderResults(r) {
+  $('results').style.display = 'flex';
+
+  const maxMacro = Math.max(
+    r.total_macros.protein_g * 4,
+    r.total_macros.carbohydrates_g * 4,
+    r.total_macros.fat_g * 9,
+    r.total_macros.fiber_g * 4,
+    r.total_macros.sugar_g * 4,
+    r.total_macros.sodium_mg / 1000 * 4,
+    1
+  );
+
+  const macroBar = (label, value, unit, cssClass, refMax) => `
+    <div class="macro-row">
+      <span class="macro-label">${label}</span>
+      <div class="macro-bar-wrap">
+        <div class="macro-bar ${cssClass}" style="width:${Math.min(100, (value / refMax) * 100)}%"></div>
+      </div>
+      <span class="macro-value">${value.toFixed(1)}${unit}</span>
+    </div>`;
+
+  const componentsHTML = r.components.map(c => `
+    <div class="component">
+      <div class="component-header">
+        <span class="component-name">${esc(c.name)}</span>
+        <span class="component-calories">${c.calories_kcal.toFixed(0)} kcal</span>
+      </div>
+      <div class="component-details">
+        <span>${c.estimated_portion_g.toFixed(0)}g</span>
+        <span>P:${c.macros.protein_g.toFixed(1)}g</span>
+        <span>C:${c.macros.carbohydrates_g.toFixed(1)}g</span>
+        <span>F:${c.macros.fat_g.toFixed(1)}g</span>
+        ${c.preparation_method ? `<span>${esc(c.preparation_method)}</span>` : ''}
+        <span class="confidence-chip ${c.confidence}">${c.confidence}</span>
+      </div>
+    </div>`).join('');
+
+  const flagsHTML = r.health_flags.length
+    ? r.health_flags.map(f => `<span class="flag">${esc(f)}</span>`).join('')
+    : '<span style="color:var(--text2);font-size:13px">No health flags</span>';
+
+  $('results').innerHTML = `
+    <div class="hero-card">
+      <div class="dish-name">${esc(r.dish_name)}</div>
+      ${r.cuisine_type ? `<div class="cuisine">${esc(r.cuisine_type)}</div>` : ''}
+      <div class="calorie-number">${r.total_calories_kcal.toFixed(0)}</div>
+      <div class="calorie-label">calories</div>
+      <div class="confidence-chip ${r.overall_confidence}">${r.overall_confidence} confidence</div>
+    </div>
+
+    <div class="macro-card">
+      <h3>Macronutrients</h3>
+      ${macroBar('Protein', r.total_macros.protein_g, 'g', 'protein', maxMacro)}
+      ${macroBar('Carbs', r.total_macros.carbohydrates_g, 'g', 'carbs', maxMacro)}
+      ${macroBar('Fat', r.total_macros.fat_g, 'g', 'fat', maxMacro)}
+      ${macroBar('Fiber', r.total_macros.fiber_g, 'g', 'fiber', maxMacro)}
+      ${macroBar('Sugar', r.total_macros.sugar_g, 'g', 'sugar', maxMacro)}
+      ${macroBar('Sodium', r.total_macros.sodium_mg, 'mg', 'sodium', Math.max(maxMacro, r.total_macros.sodium_mg / 1000 * 4))}
+    </div>
+
+    <div class="components-card">
+      <h3>Food Components</h3>
+      ${componentsHTML}
+    </div>
+
+    <div class="flags-card">
+      <h3>Health Flags</h3>
+      <div class="flags">${flagsHTML}</div>
+    </div>
+  `;
+
+  $('disclaimer').textContent = r.estimation_disclaimer;
+  $('disclaimer').style.display = 'block';
+}
+
+function esc(s) {
+  const el = document.createElement('span');
+  el.textContent = s;
+  return el.innerHTML;
+}
+</script>
+</body>
+</html>

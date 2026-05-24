@@ -5,9 +5,12 @@ FastAPI application entry point for Mayda AI.
 import logging
 from contextlib import asynccontextmanager
 
+from pathlib import Path
+
 import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from src.api.inventory_routes import router as inventory_router
 from src.api.nutrition_routes import router as nutrition_router
@@ -133,6 +136,13 @@ async def root():
         "health": "/api/health",
         "docs": "/docs",
     }
+
+
+@app.get("/demo", response_class=HTMLResponse)
+async def demo():
+    """Serve the nutrition vision agent demo page."""
+    demo_path = Path(__file__).resolve().parent.parent / "demo.html"
+    return demo_path.read_text()
 
 
 # ── Dev entry point ──
